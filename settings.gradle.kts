@@ -5,4 +5,6 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "conreg"
-include("core")
+include("conreg-core")
+include("conreg-httpclient-jdk")
+include("conreg-cli")
