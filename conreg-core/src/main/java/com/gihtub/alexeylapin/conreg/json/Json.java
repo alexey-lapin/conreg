@@ -4,6 +4,6 @@ public interface Json {
 
     <T> String render(T object);
 
-    <T> T parse(String json);
+    <T> T parse(String json, Class<T> aClass);
 
 }

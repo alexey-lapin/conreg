@@ -14,10 +14,12 @@ public class JdkApiClient implements ApiClient {
 
     private final HttpClient httpClient;
     private final Auth auth;
+    private final Json json;
 
     public JdkApiClient(HttpClient httpClient, Auth auth, Json json) {
         this.httpClient = httpClient;
         this.auth = auth;
+        this.json = json;
     }
 
     @Override
@@ -31,11 +33,10 @@ public class JdkApiClient implements ApiClient {
                     .GET()
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            String body = response.body();
+            return json.parse(response.body(), ManifestDto.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        return null;
     }
 
 }

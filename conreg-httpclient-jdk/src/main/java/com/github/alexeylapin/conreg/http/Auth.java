@@ -26,7 +26,7 @@ public class Auth {
                     .GET()
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            DockerAuthDto dockerAuthDto = json.parse(response.body());
+            DockerAuthDto dockerAuthDto = json.parse(response.body(), DockerAuthDto.class);
             return "Bearer " + dockerAuthDto.getToken();
         } catch (Exception e) {
             throw new RuntimeException(e);
