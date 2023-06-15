@@ -8,6 +8,9 @@ java {
 }
 
 dependencies {
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
+    implementation("org.projectlombok:lombok:1.18.26")
+
     implementation(project(":conreg-core"))
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))

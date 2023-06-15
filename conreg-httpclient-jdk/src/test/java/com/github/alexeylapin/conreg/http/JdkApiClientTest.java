@@ -16,16 +16,29 @@ import java.net.http.HttpClient;
 class JdkApiClientTest {
 
     @Test
-    void name() {
+    void name1() {
         HttpClient httpClient = HttpClient.newHttpClient();
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .addMixIn(DockerAuthDto.class, DockerAuthMixin.class);
         JacksonJson jacksonJson = new JacksonJson(objectMapper);
-        ApiClient apiClient = new JdkApiClient(httpClient, new Auth(httpClient, jacksonJson), jacksonJson);
+        ApiClient apiClient = new JdkApiClient(httpClient, new Authenticator(httpClient, jacksonJson), jacksonJson);
         ManifestDto manifest = apiClient.getManifest(new Reference("https://registry-1.docker.io",
                 "library/alpine", "latest", null));
+        System.out.println(manifest);
+    }
 
+    @Test
+    void name2() {
+        HttpClient httpClient = HttpClient.newHttpClient();
+        ObjectMapper objectMapper = new ObjectMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .addMixIn(DockerAuthDto.class, DockerAuthMixin.class);
+        JacksonJson jacksonJson = new JacksonJson(objectMapper);
+        ApiClient apiClient = new JdkApiClient(httpClient, new Authenticator(httpClient, jacksonJson), jacksonJson);
+        ManifestDto manifest = apiClient.getManifest(new Reference("https://ghcr.io",
+                "alexey-lapin/micronaut-proxy", "latest", null));
+        System.out.println(manifest);
     }
 
 }
