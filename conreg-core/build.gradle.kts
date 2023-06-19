@@ -11,6 +11,8 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.26")
     implementation("org.projectlombok:lombok:1.18.26")
 
+    implementation("org.apache.commons:commons-compress:1.21")
+
     compileOnly("com.fasterxml.jackson.core:jackson-databind:2.15.1")
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))

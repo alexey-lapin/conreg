@@ -1,4 +1,4 @@
-package com.gihtub.alexeylapin.conreg.model;
+package com.gihtub.alexeylapin.conreg.image;
 
 import lombok.Value;
 
