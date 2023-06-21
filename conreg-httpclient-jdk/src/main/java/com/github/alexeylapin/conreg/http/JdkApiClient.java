@@ -1,9 +1,10 @@
 package com.github.alexeylapin.conreg.http;
 
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
+import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
-import com.gihtub.alexeylapin.conreg.json.Json;
 import com.gihtub.alexeylapin.conreg.image.Reference;
+import com.gihtub.alexeylapin.conreg.json.Json;
 import lombok.SneakyThrows;
 
 import java.io.InputStream;
@@ -14,11 +15,13 @@ import java.net.http.HttpResponse;
 
 public class JdkApiClient implements ApiClient {
 
+    private final RegistryResolver registryResolver;
     private final HttpClient httpClient;
     private final Authenticator authenticator;
     private final Json json;
 
-    public JdkApiClient(HttpClient httpClient, Authenticator authenticator, Json json) {
+    public JdkApiClient(RegistryResolver registryResolver, HttpClient httpClient, Authenticator authenticator, Json json) {
+        this.registryResolver = registryResolver;
         this.httpClient = httpClient;
         this.authenticator = authenticator;
         this.json = json;
@@ -27,7 +30,11 @@ public class JdkApiClient implements ApiClient {
     @Override
     public ManifestDto getManifest(Reference reference) {
         try {
-            String uri = String.format(MANIFEST, reference.getEndpoint(), reference.getName(), reference.getTag());
+            String uri = String.format(MANIFEST,
+                    resolveRegistry(reference.getRegistry()),
+                    reference.getNamespace(),
+                    reference.getName(),
+                    reference.getTagOrDigest());
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(new URI(uri))
                     .header("Accept", "application/vnd.docker.distribution.manifest.v2+json")
@@ -42,7 +49,11 @@ public class JdkApiClient implements ApiClient {
     @Override
     public InputStream getBlob(Reference reference, String digest) {
         try {
-            String uri = String.format(BLOB, reference.getEndpoint(), reference.getName(), digest);
+            String uri = String.format(BLOB,
+                    resolveRegistry(reference.getRegistry()),
+                    reference.getNamespace(),
+                    reference.getName(),
+                    digest);
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(new URI(uri))
                     .GET();
@@ -64,6 +75,10 @@ public class JdkApiClient implements ApiClient {
             response = httpClient.send(requestBuilder.build(), bodyHandler);
         }
         return response;
+    }
+
+    private String resolveRegistry(String registry) {
+        return registryResolver.resolve(registry);
     }
 
 }
