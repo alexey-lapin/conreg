@@ -1,7 +1,7 @@
 package com.github.alexeylapin.conreg.http;
 
 import com.gihtub.alexeylapin.conreg.client.http.dto.DockerAuthDto;
-import com.gihtub.alexeylapin.conreg.json.Json;
+import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,11 +13,11 @@ import java.util.Map;
 public class Authenticator {
 
     private final HttpClient httpClient;
-    private final Json json;
+    private final JsonCodec jsonCodec;
 
-    public Authenticator(HttpClient httpClient, Json json) {
+    public Authenticator(HttpClient httpClient, JsonCodec jsonCodec) {
         this.httpClient = httpClient;
-        this.json = json;
+        this.jsonCodec = jsonCodec;
     }
 
     public String authenticate(String context) {
@@ -37,7 +37,7 @@ public class Authenticator {
                     .GET()
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            DockerAuthDto dockerAuthDto = json.parse(response.body(), DockerAuthDto.class);
+            DockerAuthDto dockerAuthDto = jsonCodec.decode(response.body(), DockerAuthDto.class);
             return "Bearer " + dockerAuthDto.getToken();
         } catch (Exception e) {
             throw new RuntimeException(e);

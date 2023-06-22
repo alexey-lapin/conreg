@@ -4,7 +4,7 @@ import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
 import com.gihtub.alexeylapin.conreg.image.Reference;
-import com.gihtub.alexeylapin.conreg.json.Json;
+import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import lombok.SneakyThrows;
 
 import java.io.InputStream;
@@ -18,13 +18,13 @@ public class JdkApiClient implements ApiClient {
     private final RegistryResolver registryResolver;
     private final HttpClient httpClient;
     private final Authenticator authenticator;
-    private final Json json;
+    private final JsonCodec jsonCodec;
 
-    public JdkApiClient(RegistryResolver registryResolver, HttpClient httpClient, Authenticator authenticator, Json json) {
+    public JdkApiClient(RegistryResolver registryResolver, HttpClient httpClient, Authenticator authenticator, JsonCodec jsonCodec) {
         this.registryResolver = registryResolver;
         this.httpClient = httpClient;
         this.authenticator = authenticator;
-        this.json = json;
+        this.jsonCodec = jsonCodec;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class JdkApiClient implements ApiClient {
                     .header("Accept", "application/vnd.docker.distribution.manifest.v2+json")
                     .GET();
             HttpResponse<String> response = withAuth(requestBuilder, HttpResponse.BodyHandlers.ofString());
-            return json.parse(response.body(), ManifestDto.class);
+            return jsonCodec.decode(response.body(), ManifestDto.class);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

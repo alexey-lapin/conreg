@@ -12,9 +12,9 @@ import com.gihtub.alexeylapin.conreg.client.http.dto.DockerAuthDto;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
 import com.gihtub.alexeylapin.conreg.io.DefaultFileOperations;
 import com.gihtub.alexeylapin.conreg.io.FileOperations;
-import com.gihtub.alexeylapin.conreg.json.Json;
+import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.DockerAuthMixin;
-import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJson;
+import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
@@ -28,7 +28,7 @@ class JdkApiClientTest {
 
     private RegistryResolver registryResolver;
     private HttpClient httpClient;
-    private Json json;
+    private JsonCodec jsonCodec;
 
     @BeforeEach
     void setUp() {
@@ -39,12 +39,12 @@ class JdkApiClientTest {
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .addMixIn(DockerAuthDto.class, DockerAuthMixin.class);
-        json = new JacksonJson(objectMapper);
+        jsonCodec = new JacksonJsonCodec(objectMapper);
     }
 
     @Test
     void name1() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, json), json);
+        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, jsonCodec), jsonCodec);
 
         ManifestDto manifest = apiClient.getManifest(Reference.of("alpine"));
         System.out.println(manifest);
@@ -52,7 +52,7 @@ class JdkApiClientTest {
 
     @Test
     void name2() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, json), json);
+        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, jsonCodec), jsonCodec);
 
         ManifestDto manifest = apiClient.getManifest(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy"));
         System.out.println(manifest);
@@ -60,10 +60,10 @@ class JdkApiClientTest {
 
     @Test
     void name3() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, json), json);
+        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, jsonCodec), jsonCodec);
 
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-        FileOperations fileOperations = new DefaultFileOperations(json);
+        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 
         RegistryClient registryClient = new DefaultRegistryClient(registryOperations, fileOperations);
 
