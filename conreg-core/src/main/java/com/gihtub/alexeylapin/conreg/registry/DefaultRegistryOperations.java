@@ -30,4 +30,9 @@ public class DefaultRegistryOperations implements RegistryOperations {
         return new Image(reference, configBlob, layerBlobs);
     }
 
+    @Override
+    public void push(Reference reference, Image image) {
+
+    }
+
 }

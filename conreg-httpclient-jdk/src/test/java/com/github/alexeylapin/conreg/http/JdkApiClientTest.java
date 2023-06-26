@@ -70,4 +70,16 @@ class JdkApiClientTest {
         registryClient.pull(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
     }
 
+    @Test
+    void name4() {
+        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, new Authenticator(httpClient, jsonCodec), jsonCodec);
+
+        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
+        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
+
+        RegistryClient registryClient = new DefaultRegistryClient(registryOperations, fileOperations);
+
+        registryClient.push(Paths.get("mic-prox.tar"), Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5"));
+    }
+
 }

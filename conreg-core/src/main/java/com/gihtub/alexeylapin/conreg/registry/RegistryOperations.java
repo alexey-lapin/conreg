@@ -7,4 +7,6 @@ public interface RegistryOperations {
 
     Image pull(Reference reference);
 
+    void push(Reference reference, Image image);
+
 }
