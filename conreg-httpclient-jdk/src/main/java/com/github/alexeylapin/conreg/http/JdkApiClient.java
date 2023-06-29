@@ -3,6 +3,7 @@ package com.github.alexeylapin.conreg.http;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.Authenticator;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
+import com.gihtub.alexeylapin.conreg.client.http.dto.DockerAuthDto;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
 import com.gihtub.alexeylapin.conreg.image.Blob;
 import com.gihtub.alexeylapin.conreg.image.Reference;
@@ -14,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.regex.Matcher;
 
 public class JdkApiClient implements ApiClient {
 
@@ -22,7 +24,10 @@ public class JdkApiClient implements ApiClient {
     private final Authenticator authenticator;
     private final JsonCodec jsonCodec;
 
-    public JdkApiClient(RegistryResolver registryResolver, HttpClient httpClient, Authenticator authenticator, JsonCodec jsonCodec) {
+    public JdkApiClient(RegistryResolver registryResolver,
+                        HttpClient httpClient,
+                        Authenticator authenticator,
+                        JsonCodec jsonCodec) {
         this.registryResolver = registryResolver;
         this.httpClient = httpClient;
         this.authenticator = authenticator;
@@ -30,9 +35,29 @@ public class JdkApiClient implements ApiClient {
     }
 
     @Override
+    public String authenticate(String registry, String challenge) {
+        Matcher matcher = AUTH_CHALLENGE_PATTERN.matcher(challenge);
+        matcher.matches();
+        String uri = String.format("%s?service=%s&scope=%s", matcher.group(1), matcher.group(2), matcher.group(3));
+        try {
+            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                    .uri(new URI(uri))
+                    .GET();
+//            getForRegistry(registry).ifPresent(auth -> {
+//                requestBuilder.setHeader("authorization", auth);
+//            });
+            HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+            DockerAuthDto dockerAuthDto = jsonCodec.decode(response.body(), DockerAuthDto.class);
+            return "Bearer " + dockerAuthDto.getToken();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public ManifestDto getManifest(Reference reference) {
         try {
-            String uri = String.format(MANIFEST,
+            String uri = String.format(URL_MANIFEST,
                     resolveRegistry(reference.getRegistry()),
                     reference.getNamespace(),
                     reference.getName(),
@@ -51,7 +76,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public InputStream getBlob(Reference reference, String digest) {
         try {
-            String uri = String.format(BLOB,
+            String uri = String.format(URL_BLOB,
                     resolveRegistry(reference.getRegistry()),
                     reference.getNamespace(),
                     reference.getName(),
@@ -69,7 +94,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public void putBlob(Reference reference, String digest, Blob blob) {
         try {
-            String uri = String.format(BLOB,
+            String uri = String.format(URL_BLOB,
                     resolveRegistry(reference.getRegistry()),
                     reference.getNamespace(),
                     reference.getName(),
@@ -87,7 +112,7 @@ public class JdkApiClient implements ApiClient {
 
     public boolean isBlobExists(Reference reference, String digest) {
         try {
-            String uri = String.format(BLOB,
+            String uri = String.format(URL_BLOB,
                     resolveRegistry(reference.getRegistry()),
                     reference.getNamespace(),
                     reference.getName(),
@@ -104,7 +129,7 @@ public class JdkApiClient implements ApiClient {
 
     public String startPush(Reference reference) {
         try {
-            String uri = String.format(BLOB_UPLOAD,
+            String uri = String.format(URL_BLOB_UPLOAD,
                     resolveRegistry(reference.getRegistry()),
                     reference.getNamespace(),
                     reference.getName());
@@ -123,10 +148,11 @@ public class JdkApiClient implements ApiClient {
     private <T> HttpResponse<T> withAuth(String registry,
                                          HttpRequest.Builder requestBuilder,
                                          HttpResponse.BodyHandler<T> bodyHandler) {
+        // try existing token
         HttpResponse<T> response = httpClient.send(requestBuilder.build(), bodyHandler);
-        if (response.statusCode() == 401 || response.statusCode() == 403) {
+        if (response.statusCode() == 401) {
             response.headers().firstValue("www-authenticate").ifPresent(value -> {
-                String authorization = authenticator.authenticate(registry, value);
+                String authorization = authenticate(registry, value);
                 requestBuilder.setHeader("authorization", authorization);
             });
             response = httpClient.send(requestBuilder.build(), bodyHandler);
@@ -136,6 +162,16 @@ public class JdkApiClient implements ApiClient {
 
     private String resolveRegistry(String registry) {
         return registryResolver.resolve(registry);
+    }
+
+    private static String unquote(String string) {
+        if (string.startsWith("\"")) {
+            string = string.substring(1);
+        }
+        if (string.endsWith("\"")) {
+            string = string.substring(0, string.length() - 1);
+        }
+        return string;
     }
 
 }

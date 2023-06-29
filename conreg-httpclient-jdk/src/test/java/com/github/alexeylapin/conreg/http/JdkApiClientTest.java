@@ -18,11 +18,19 @@ import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.net.http.HttpClient;
 import java.nio.file.Paths;
 
 class JdkApiClientTest {
+
+    static {
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+    }
 
     private RegistryResolver registryResolver;
     private HttpClient httpClient;
@@ -31,6 +39,8 @@ class JdkApiClientTest {
 
     @BeforeEach
     void setUp() {
+        Logger logger = LoggerFactory.getLogger(JdkApiClientTest.class);
+//        logger.debug("qwer");
         registryResolver = new WellKnownRegistries();
 
         httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
@@ -41,7 +51,7 @@ class JdkApiClientTest {
         jsonCodec = new JacksonJsonCodec(objectMapper);
 
         FileAuthenticationHolder holder = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
-        authenticator = new DefaultAuthenticator(httpClient, jsonCodec, holder);
+        authenticator = new DefaultAuthenticator(holder);
     }
 
     @Test
