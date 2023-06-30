@@ -35,24 +35,22 @@ public class JdkApiClient implements ApiClient {
         this.authenticationProvider = authenticationProvider;
     }
 
+    @SneakyThrows
     @Override
     public String authenticate(String registry, String challenge) {
         Matcher matcher = AUTH_CHALLENGE_PATTERN.matcher(challenge);
         matcher.matches();
         String uri = String.format("%s?service=%s&scope=%s", matcher.group(1), matcher.group(2), matcher.group(3));
-        try {
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(new URI(uri))
-                    .GET();
-            authenticationProvider.getForRegistry(Registry.of(registry)).ifPresent(auth -> {
-                requestBuilder.setHeader("authorization", auth);
-            });
-            HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
-            TokenDto tokenDto = jsonCodec.decode(response.body(), TokenDto.class);
-            return "Bearer " + tokenDto.getToken();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .GET();
+        authenticationProvider.getForRegistry(Registry.of(registry)).ifPresent(auth -> {
+            requestBuilder.setHeader("authorization", auth);
+        });
+        HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        validateResponse(response);
+        TokenDto tokenDto = jsonCodec.decode(response.body(), TokenDto.class);
+        return "Bearer " + tokenDto.getToken();
     }
 
     @Override
@@ -151,9 +149,7 @@ public class JdkApiClient implements ApiClient {
                 response = httpClient.send(builder.build(), bodyHandler);
             }
         }
-        if (response.statusCode() >= 300) {
-            throw new RuntimeException("unexpected status code: " + response.statusCode());
-        }
+        validateResponse(response);
         return response;
     }
 
@@ -164,6 +160,12 @@ public class JdkApiClient implements ApiClient {
 
     private String resolveRegistry(String registry) {
         return registryResolver.resolve(registry);
+    }
+
+    private static void validateResponse(HttpResponse<?> response) {
+        if (response.statusCode() >= 300) {
+            throw new RuntimeException("unexpected status code: " + response.statusCode());
+        }
     }
 
 }
