@@ -3,7 +3,7 @@ package com.gihtub.alexeylapin.conreg.client.http.dto;
 import lombok.Data;
 
 @Data
-public class DockerAuthDto {
+public class TokenDto {
 
     private String token;
     private String accessToken;

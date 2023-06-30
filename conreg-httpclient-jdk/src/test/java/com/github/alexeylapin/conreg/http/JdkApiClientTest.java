@@ -5,15 +5,19 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gihtub.alexeylapin.conreg.DefaultRegistryClient;
 import com.gihtub.alexeylapin.conreg.RegistryClient;
-import com.gihtub.alexeylapin.conreg.client.http.*;
-import com.gihtub.alexeylapin.conreg.client.http.dto.DockerAuthDto;
+import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
+import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
+import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
+import com.gihtub.alexeylapin.conreg.client.http.WellKnownRegistries;
+import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
+import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
+import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.io.DefaultFileOperations;
 import com.gihtub.alexeylapin.conreg.io.FileOperations;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.DockerAuthMixin;
 import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
-import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,45 +39,39 @@ class JdkApiClientTest {
     private RegistryResolver registryResolver;
     private HttpClient httpClient;
     private JsonCodec jsonCodec;
-    private DefaultAuthenticator authenticator;
+    private ApiClient apiClient;
 
     @BeforeEach
     void setUp() {
         Logger logger = LoggerFactory.getLogger(JdkApiClientTest.class);
-//        logger.debug("qwer");
         registryResolver = new WellKnownRegistries();
 
-        httpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
+        HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
+        httpClient = new LoggingHttpClient(actualHttpClient);
 
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .addMixIn(DockerAuthDto.class, DockerAuthMixin.class);
+                .addMixIn(TokenDto.class, DockerAuthMixin.class);
         jsonCodec = new JacksonJsonCodec(objectMapper);
 
-        FileAuthenticationHolder holder = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
-        authenticator = new DefaultAuthenticator(holder);
+        FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
+        apiClient = new JdkApiClient(registryResolver, httpClient, jsonCodec, authenticationProvider);
     }
 
     @Test
     void name1() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, authenticator, jsonCodec);
-
         ManifestDto manifest = apiClient.getManifest(Reference.of("alpine"));
         System.out.println(manifest);
     }
 
     @Test
     void name2() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, authenticator, jsonCodec);
-
         ManifestDto manifest = apiClient.getManifest(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy"));
         System.out.println(manifest);
     }
 
     @Test
     void name3() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, authenticator, jsonCodec);
-
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
         FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 
@@ -84,8 +82,6 @@ class JdkApiClientTest {
 
     @Test
     void name4() {
-        ApiClient apiClient = new JdkApiClient(registryResolver, httpClient, authenticator, jsonCodec);
-
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
         FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 

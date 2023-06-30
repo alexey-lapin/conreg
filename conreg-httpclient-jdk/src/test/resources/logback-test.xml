@@ -16,5 +16,6 @@
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="jdk.internal.httpclient.debug" level="debug"/>
+<!--    <logger name="jdk.internal.httpclient.debug" level="debug"/>-->
+    <logger name="com.github.alexeylapin.conreg.http.LoggingHttpClient" level="debug"/>
 </configuration>

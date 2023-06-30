@@ -6,12 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Data
-public class AuthsDto {
+public class ConfigDto {
 
-    private Map<String, AuthDto> auths = new HashMap<>();
+    private Map<String, AuthConfigDto> auths = new HashMap<>();
 
     @Data
-    public static class AuthDto {
+    public static class AuthConfigDto {
 
         private String auth;
 

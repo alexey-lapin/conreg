@@ -1,10 +1,11 @@
 package com.github.alexeylapin.conreg.http;
 
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
-import com.gihtub.alexeylapin.conreg.client.http.Authenticator;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
-import com.gihtub.alexeylapin.conreg.client.http.dto.DockerAuthDto;
+import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
+import com.gihtub.alexeylapin.conreg.client.http.auth.Registry;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
+import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.image.Blob;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
@@ -15,23 +16,23 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Optional;
 import java.util.regex.Matcher;
 
 public class JdkApiClient implements ApiClient {
 
     private final RegistryResolver registryResolver;
     private final HttpClient httpClient;
-    private final Authenticator authenticator;
     private final JsonCodec jsonCodec;
+    private final AuthenticationProvider authenticationProvider;
 
     public JdkApiClient(RegistryResolver registryResolver,
                         HttpClient httpClient,
-                        Authenticator authenticator,
-                        JsonCodec jsonCodec) {
+                        JsonCodec jsonCodec, AuthenticationProvider authenticationProvider) {
         this.registryResolver = registryResolver;
         this.httpClient = httpClient;
-        this.authenticator = authenticator;
         this.jsonCodec = jsonCodec;
+        this.authenticationProvider = authenticationProvider;
     }
 
     @Override
@@ -43,12 +44,12 @@ public class JdkApiClient implements ApiClient {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                     .uri(new URI(uri))
                     .GET();
-//            getForRegistry(registry).ifPresent(auth -> {
-//                requestBuilder.setHeader("authorization", auth);
-//            });
+            authenticationProvider.getForRegistry(Registry.of(registry)).ifPresent(auth -> {
+                requestBuilder.setHeader("authorization", auth);
+            });
             HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
-            DockerAuthDto dockerAuthDto = jsonCodec.decode(response.body(), DockerAuthDto.class);
-            return "Bearer " + dockerAuthDto.getToken();
+            TokenDto tokenDto = jsonCodec.decode(response.body(), TokenDto.class);
+            return "Bearer " + tokenDto.getToken();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -56,92 +57,82 @@ public class JdkApiClient implements ApiClient {
 
     @Override
     public ManifestDto getManifest(Reference reference) {
-        try {
-            String uri = String.format(URL_MANIFEST,
-                    resolveRegistry(reference.getRegistry()),
-                    reference.getNamespace(),
-                    reference.getName(),
-                    reference.getTagOrDigest());
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(new URI(uri))
-                    .header("Accept", "application/vnd.docker.distribution.manifest.v2+json")
-                    .GET();
-            HttpResponse<String> response = withAuth(reference.getRegistry(), requestBuilder, HttpResponse.BodyHandlers.ofString());
-            return jsonCodec.decode(response.body(), ManifestDto.class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String uri = String.format(URL_MANIFEST,
+                resolveRegistry(reference.getRegistry()),
+                reference.getNamespace(),
+                reference.getName(),
+                reference.getTagOrDigest());
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .header("Accept", "application/vnd.docker.distribution.manifest.v2+json")
+                .GET();
+        HttpResponse<String> response = withAuth(reference.getRegistry(),
+                requestBuilder,
+                HttpResponse.BodyHandlers.ofString());
+        return jsonCodec.decode(response.body(), ManifestDto.class);
     }
 
     @Override
     public InputStream getBlob(Reference reference, String digest) {
-        try {
-            String uri = String.format(URL_BLOB,
-                    resolveRegistry(reference.getRegistry()),
-                    reference.getNamespace(),
-                    reference.getName(),
-                    digest);
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(new URI(uri))
-                    .GET();
-            HttpResponse<InputStream> response = withAuth(reference.getRegistry(), requestBuilder, HttpResponse.BodyHandlers.ofInputStream());
-            return response.body();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String uri = String.format(URL_BLOB,
+                resolveRegistry(reference.getRegistry()),
+                reference.getNamespace(),
+                reference.getName(),
+                digest);
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .GET();
+        HttpResponse<InputStream> response = withAuth(reference.getRegistry(),
+                requestBuilder,
+                HttpResponse.BodyHandlers.ofInputStream());
+        return response.body();
     }
 
     @Override
     public void putBlob(Reference reference, String digest, Blob blob) {
-        try {
-            String uri = String.format(URL_BLOB,
-                    resolveRegistry(reference.getRegistry()),
-                    reference.getNamespace(),
-                    reference.getName(),
-                    digest);
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(new URI(uri))
-                    .header("content-type", "application/octet-stream")
-                    .PUT(HttpRequest.BodyPublishers.ofInputStream(blob.getContent()));
-            HttpResponse<Void> response = withAuth(reference.getRegistry(), requestBuilder, HttpResponse.BodyHandlers.discarding());
-            response.statusCode();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String uri = String.format(URL_BLOB,
+                resolveRegistry(reference.getRegistry()),
+                reference.getNamespace(),
+                reference.getName(),
+                digest);
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .header("content-type", "application/octet-stream")
+                .PUT(HttpRequest.BodyPublishers.ofInputStream(blob.getContent()));
+        HttpResponse<Void> response = withAuth(reference.getRegistry(),
+                requestBuilder,
+                HttpResponse.BodyHandlers.discarding());
+        response.statusCode();
     }
 
     public boolean isBlobExists(Reference reference, String digest) {
-        try {
-            String uri = String.format(URL_BLOB,
-                    resolveRegistry(reference.getRegistry()),
-                    reference.getNamespace(),
-                    reference.getName(),
-                    digest);
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(new URI(uri))
-                    .method("HEAD", HttpRequest.BodyPublishers.noBody());
-            HttpResponse<Void> response = withAuth(reference.getRegistry(), requestBuilder, HttpResponse.BodyHandlers.discarding());
-            return response.statusCode() < 400;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String uri = String.format(URL_BLOB,
+                resolveRegistry(reference.getRegistry()),
+                reference.getNamespace(),
+                reference.getName(),
+                digest);
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .method("HEAD", HttpRequest.BodyPublishers.noBody());
+        HttpResponse<Void> response = withAuth(reference.getRegistry(),
+                requestBuilder,
+                HttpResponse.BodyHandlers.discarding());
+        return true;
     }
 
     public String startPush(Reference reference) {
-        try {
-            String uri = String.format(URL_BLOB_UPLOAD,
-                    resolveRegistry(reference.getRegistry()),
-                    reference.getNamespace(),
-                    reference.getName());
-            HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(new URI(uri))
-                    .header("content-type", "application/vnd.docker.image.rootfs.diff.tar.gzip")
-                    .POST(HttpRequest.BodyPublishers.noBody());
-            HttpResponse<Void> response = withAuth(reference.getRegistry(), requestBuilder, HttpResponse.BodyHandlers.discarding());
-            return response.headers().firstValue("location").orElseThrow();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        String uri = String.format(URL_BLOB_UPLOAD,
+                resolveRegistry(reference.getRegistry()),
+                reference.getNamespace(),
+                reference.getName());
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .header("content-type", "application/vnd.docker.image.rootfs.diff.tar.gzip")
+                .POST(HttpRequest.BodyPublishers.noBody());
+        HttpResponse<Void> response = withAuth(reference.getRegistry(),
+                requestBuilder,
+                HttpResponse.BodyHandlers.discarding());
+        return response.headers().firstValue("location").orElseThrow();
     }
 
     @SneakyThrows
@@ -149,29 +140,30 @@ public class JdkApiClient implements ApiClient {
                                          HttpRequest.Builder requestBuilder,
                                          HttpResponse.BodyHandler<T> bodyHandler) {
         // try existing token
-        HttpResponse<T> response = httpClient.send(requestBuilder.build(), bodyHandler);
+        HttpRequest.Builder builder = requestBuilder.copy();
+        HttpResponse<T> response = httpClient.send(builder.build(), bodyHandler);
         if (response.statusCode() == 401) {
-            response.headers().firstValue("www-authenticate").ifPresent(value -> {
-                String authorization = authenticate(registry, value);
-                requestBuilder.setHeader("authorization", authorization);
-            });
-            response = httpClient.send(requestBuilder.build(), bodyHandler);
+            Optional<String> challengeHeaderOptional = response.headers().firstValue("www-authenticate");
+            if (challengeHeaderOptional.isPresent()) {
+                String challenge = challengeHeaderOptional.get();
+                String authorization = authenticate(registry, challenge);
+                builder.setHeader("authorization", authorization);
+                response = httpClient.send(builder.build(), bodyHandler);
+            }
+        }
+        if (response.statusCode() >= 300) {
+            throw new RuntimeException("unexpected status code: " + response.statusCode());
         }
         return response;
     }
 
-    private String resolveRegistry(String registry) {
-        return registryResolver.resolve(registry);
+    @SneakyThrows
+    private static URI createURI(String uri) {
+        return new URI(uri);
     }
 
-    private static String unquote(String string) {
-        if (string.startsWith("\"")) {
-            string = string.substring(1);
-        }
-        if (string.endsWith("\"")) {
-            string = string.substring(0, string.length() - 1);
-        }
-        return string;
+    private String resolveRegistry(String registry) {
+        return registryResolver.resolve(registry);
     }
 
 }

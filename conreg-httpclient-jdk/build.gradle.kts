@@ -9,9 +9,10 @@ java {
 
 dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.26")
-    implementation("org.projectlombok:lombok:1.18.26")
+    compileOnly("org.projectlombok:lombok:1.18.26")
 
     implementation(project(":conreg-core"))
+    implementation("org.slf4j:jul-to-slf4j:2.0.5")
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
