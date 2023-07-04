@@ -10,6 +10,7 @@ import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
+import com.gihtub.alexeylapin.conreg.client.http.auth.NoopTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDto;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.image.Reference;
@@ -55,7 +56,7 @@ class JdkApiClientTest {
         jsonCodec = new JacksonJsonCodec(objectMapper);
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
-        apiClient = new JdkApiClient(registryResolver, httpClient, jsonCodec, authenticationProvider);
+        apiClient = new JdkApiClient(registryResolver, httpClient, jsonCodec, authenticationProvider, new NoopTokenStore());
     }
 
     @Test

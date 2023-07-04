@@ -1,5 +1,6 @@
 package com.gihtub.alexeylapin.conreg.client.http.auth;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -12,6 +13,7 @@ public interface Registry {
     }
 
     @Getter
+    @EqualsAndHashCode
     class NamedRegistry implements Registry {
 
         private final String name;
