@@ -17,7 +17,7 @@ import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.io.DefaultFileOperations;
 import com.gihtub.alexeylapin.conreg.io.FileOperations;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
-import com.gihtub.alexeylapin.conreg.json.jackson.DockerAuthMixin;
+import com.gihtub.alexeylapin.conreg.json.jackson.TokenDtoMixin;
 import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
 import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
@@ -52,7 +52,7 @@ class JdkApiClientTest {
 
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .addMixIn(TokenDto.class, DockerAuthMixin.class);
+                .addMixIn(TokenDto.class, TokenDtoMixin.class);
         jsonCodec = new JacksonJsonCodec(objectMapper);
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
