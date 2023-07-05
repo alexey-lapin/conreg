@@ -21,7 +21,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 
@@ -102,7 +101,7 @@ public class JdkApiClient implements ApiClient {
     }
 
     @Override
-    public void putManifest(Reference reference, ManifestDescriptor manifest) {
+    public void putManifest(Reference reference, ManifestDescriptor manifestDescriptor) {
         String uri = String.format(URL_MANIFEST,
                 resolveRegistry(reference.getRegistry()),
                 reference.getNamespace(),
@@ -110,8 +109,8 @@ public class JdkApiClient implements ApiClient {
                 reference.getTagOrDigest());
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(createURI(uri))
-                .header("content-type", "application/vnd.docker.distribution.manifest.v2+json")
-                .PUT(HttpRequest.BodyPublishers.ofString(jsonCodec.encode(manifest)));
+                .header("content-type", manifestDescriptor.getMediaType())
+                .PUT(HttpRequest.BodyPublishers.ofString(jsonCodec.encode(manifestDescriptor)));
         withAuth(reference,
                 requestBuilder,
                 HttpResponse.BodyHandlers.discarding(),
@@ -120,21 +119,20 @@ public class JdkApiClient implements ApiClient {
     }
 
     @Override
-    public InputStream getBlob(Reference reference, String digest) {
-        String uri = String.format(URL_BLOB,
+    public void deleteManifest(Reference reference) {
+        String uri = String.format(URL_MANIFEST,
                 resolveRegistry(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName(),
-                digest);
+                reference.getTagOrDigest());
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(createURI(uri))
-                .GET();
-        HttpResponse<InputStream> response = withAuth(reference,
+                .DELETE();
+        withAuth(reference,
                 requestBuilder,
-                HttpResponse.BodyHandlers.ofInputStream(),
-                Action.PULL,
+                HttpResponse.BodyHandlers.discarding(),
+                Action.PUSH,
                 RESPONSE_PREDICATE_SUCCESS);
-        return response.body();
     }
 
     @Override
@@ -156,18 +154,13 @@ public class JdkApiClient implements ApiClient {
         if (location.startsWith(SCHEMA_HTTP)) {
             return createURI(location);
         }
-        return createURI(reference.getRegistry() + location);
+        return createURI(resolveRegistry(reference.getRegistry()) + location);
     }
 
     @Override
-    public void cancelPush(Reference reference, UUID id) {
-        String uri = String.format(URL_BLOB_UPLOAD_ID,
-                resolveRegistry(reference.getRegistry()),
-                reference.getNamespace(),
-                reference.getName(),
-                id.toString());
+    public void cancelPush(Reference reference, URI uri) {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .uri(createURI(uri))
+                .uri(uri)
                 .DELETE();
         withAuth(reference,
                 requestBuilder,
@@ -195,6 +188,24 @@ public class JdkApiClient implements ApiClient {
     }
 
     @Override
+    public InputStream getBlob(Reference reference, String digest) {
+        String uri = String.format(URL_BLOB,
+                resolveRegistry(reference.getRegistry()),
+                reference.getNamespace(),
+                reference.getName(),
+                digest);
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+                .uri(createURI(uri))
+                .GET();
+        HttpResponse<InputStream> response = withAuth(reference,
+                requestBuilder,
+                HttpResponse.BodyHandlers.ofInputStream(),
+                Action.PULL,
+                RESPONSE_PREDICATE_SUCCESS);
+        return response.body();
+    }
+
+    @Override
     public void putBlob(Reference reference, URI uploadUri, String digest, Blob blob) {
         StringBuilder queryBuilder = new StringBuilder();
         if (uploadUri.getQuery() == null) {
@@ -205,7 +216,6 @@ public class JdkApiClient implements ApiClient {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(createURI(uploadUri, queryBuilder.toString()))
                 .header("content-type", "application/octet-stream")
-//                .header("content-length", String.valueOf(blob.getSize()))
                 .PUT(HttpRequest.BodyPublishers.ofInputStream(blob.getContent().unchecked()));
         withAuth(reference,
                 requestBuilder,

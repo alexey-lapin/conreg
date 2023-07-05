@@ -21,8 +21,7 @@ public interface ApiClient {
     String URL_TAGS = "%s/v2/%s/tags/list";
     String URL_MANIFEST = "%s/v2/%s/%s/manifests/%s";
     String URL_BLOB = "%s/v2/%s/%s/blobs/%s";
-    String URL_BLOB_UPLOAD = "%s/v2/%s/%s/blobs/uploads";
-    String URL_BLOB_UPLOAD_ID = "%s/v2/%s/%s/blobs/uploads/%s";
+    String URL_BLOB_UPLOAD = "%s/v2/%s/%s/blobs/uploads/";
 
     Pattern AUTH_CHALLENGE_PATTERN = Pattern.compile("Bearer realm=\"(.*?)\",service=\"(.*?)\",scope=\"(.*?)\"");
     Pattern SCOPE_PATTERN = Pattern.compile("(.*):(.*):(.*)");
@@ -31,15 +30,17 @@ public interface ApiClient {
 
     ManifestDescriptor getManifest(Reference reference);
 
-    void putManifest(Reference reference, ManifestDescriptor manifest);
+    void deleteManifest(Reference reference);
 
-    InputStream getBlob(Reference reference, String digest);
+    void putManifest(Reference reference, ManifestDescriptor manifest);
 
     URI startPush(Reference reference);
 
-    void cancelPush(Reference reference, UUID id);
+    void cancelPush(Reference reference, URI uri);
 
     boolean isBlobExists(Reference reference, String digest);
+
+    InputStream getBlob(Reference reference, String digest);
 
     void putBlob(Reference reference, URI uploadUri, String digest, Blob blob);
 

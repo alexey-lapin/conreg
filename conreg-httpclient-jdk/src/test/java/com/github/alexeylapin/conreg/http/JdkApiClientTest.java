@@ -24,7 +24,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.util.UUID;
 
 class JdkApiClientTest {
 
@@ -76,13 +75,13 @@ class JdkApiClientTest {
 
     @Test
     void name6() {
-        apiClient.cancelPush(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text"), UUID.fromString("47267c3f-4ee5-4ed5-adfb-232d7ce8ed3d"));
+        apiClient.cancelPush(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text"), URI.create("https://ghcr.io/v2/alexey-lapin/micronaut-proxy/blobs/upload/5bf5f70f-dd1d-4655-98f3-2137194de0e3"));
     }
 
     @Nested
     class Local {
 
-        private final Reference reference = Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5");
+        private final Reference reference = Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:test-2");
 
         @Test
         void name1() {
@@ -92,8 +91,13 @@ class JdkApiClientTest {
 
         @Test
         void name2() {
-            ManifestDescriptor manifest = apiClient.getManifest(reference);
-            System.out.println(manifest);
+            URI uploadUri = apiClient.startPush(reference);
+            apiClient.cancelPush(reference, uploadUri);
+        }
+
+        @Test
+        void name3() {
+            apiClient.deleteManifest(reference);
         }
 
     }
