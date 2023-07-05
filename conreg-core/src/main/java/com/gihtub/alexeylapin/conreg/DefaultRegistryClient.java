@@ -2,7 +2,9 @@ package com.gihtub.alexeylapin.conreg;
 
 import com.gihtub.alexeylapin.conreg.image.Image;
 import com.gihtub.alexeylapin.conreg.image.Reference;
+import com.gihtub.alexeylapin.conreg.io.FileImageLoader;
 import com.gihtub.alexeylapin.conreg.io.FileOperations;
+import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
 
 import java.io.InputStream;
@@ -12,10 +14,12 @@ import java.nio.file.Path;
 
 public class DefaultRegistryClient implements RegistryClient {
 
+    private final JsonCodec jsonCodec;
     private final RegistryOperations registryOperations;
     private final FileOperations fileOperations;
 
-    public DefaultRegistryClient(RegistryOperations registryOperations, FileOperations fileOperations) {
+    public DefaultRegistryClient(JsonCodec jsonCodec, RegistryOperations registryOperations, FileOperations fileOperations) {
+        this.jsonCodec = jsonCodec;
         this.registryOperations = registryOperations;
         this.fileOperations = fileOperations;
     }
@@ -37,8 +41,9 @@ public class DefaultRegistryClient implements RegistryClient {
 
     @Override
     public void push(Path path, Reference reference) {
-        try (InputStream fis = Files.newInputStream(path)) {
-            push(fis, reference);
+        try (FileImageLoader imageLoader = new FileImageLoader(jsonCodec, path, Files.createTempDirectory("conreg-"))) {
+            Image image = imageLoader.load();
+            registryOperations.push(reference, image);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -46,8 +51,8 @@ public class DefaultRegistryClient implements RegistryClient {
 
     @Override
     public void push(InputStream inputStream, Reference reference) {
-        Image image = fileOperations.load(inputStream);
-        registryOperations.push(reference, image);
+//        Image image = fileOperations.load(inputStream);
+//        registryOperations.push(reference, image);
     }
 
 }

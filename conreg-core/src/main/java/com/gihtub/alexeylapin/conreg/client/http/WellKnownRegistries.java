@@ -23,6 +23,7 @@ public class WellKnownRegistries implements RegistryResolver {
 
     public static Map<String, String> defaultRegistries() {
         Map<String, String> map = new HashMap<>();
+        map.put("localhost:5000", "http://localhost:5000");
         map.put("docker.io", "https://registry-1.docker.io");
         return map;
     }

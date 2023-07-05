@@ -1,37 +1,33 @@
-package com.github.alexeylapin.conreg.http;
-
+package com.github.alexeylapin.conreg;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gihtub.alexeylapin.conreg.DefaultRegistryClient;
+import com.gihtub.alexeylapin.conreg.RegistryClient;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.NoopTokenStore;
-import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.image.Reference;
+import com.gihtub.alexeylapin.conreg.io.DefaultFileOperations;
+import com.gihtub.alexeylapin.conreg.io.FileOperations;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.TokenDtoMixin;
+import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
+import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
+import com.github.alexeylapin.conreg.http.JdkApiClient;
+import com.github.alexeylapin.conreg.http.LoggingHttpClient;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.util.UUID;
+import java.nio.file.Paths;
 
-class JdkApiClientTest {
-
-    static {
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
-    }
+public class DefaultRegistryClientTest {
 
     private RegistryResolver registryResolver;
     private HttpClient httpClient;
@@ -40,7 +36,6 @@ class JdkApiClientTest {
 
     @BeforeEach
     void setUp() {
-        Logger logger = LoggerFactory.getLogger(JdkApiClientTest.class);
         registryResolver = new WellKnownRegistries();
 
         HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
@@ -56,46 +51,23 @@ class JdkApiClientTest {
     }
 
     @Test
-    void name1() {
-        ManifestDescriptor manifest = apiClient.getManifest(Reference.of("alpine"));
-        System.out.println(manifest);
+    void name3() {
+        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
+        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
+
+        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations, fileOperations);
+
+        registryClient.pull(Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
     }
 
     @Test
-    void name2() {
-        ManifestDescriptor manifest = apiClient.getManifest(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy"));
-        System.out.println(manifest);
-    }
+    void name4() {
+        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
+        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 
+        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations, fileOperations);
 
-    @Test
-    void name5() {
-        URI uri = apiClient.startPush(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text"));
-        System.out.println(uri);
-    }
-
-    @Test
-    void name6() {
-        apiClient.cancelPush(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text"), UUID.fromString("47267c3f-4ee5-4ed5-adfb-232d7ce8ed3d"));
-    }
-
-    @Nested
-    class Local {
-
-        private final Reference reference = Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5");
-
-        @Test
-        void name1() {
-            ManifestDescriptor manifest = apiClient.getManifest(reference);
-            System.out.println(manifest);
-        }
-
-        @Test
-        void name2() {
-            ManifestDescriptor manifest = apiClient.getManifest(reference);
-            System.out.println(manifest);
-        }
-
+        registryClient.push(Paths.get("mic-prox.tar"), Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:test-2"));
     }
 
 }

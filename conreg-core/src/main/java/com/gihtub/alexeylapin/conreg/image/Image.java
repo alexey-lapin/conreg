@@ -1,5 +1,7 @@
 package com.gihtub.alexeylapin.conreg.image;
 
+import com.gihtub.alexeylapin.conreg.client.http.dto.BlobDescriptor;
+import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -25,6 +27,15 @@ public class Image {
         ArrayList<Blob> blobs = new ArrayList<>(layers);
         blobs.add(config);
         return Collections.unmodifiableList(blobs);
+    }
+
+    public ManifestDescriptor getManifestDescriptor() {
+        return new ManifestDescriptor(2,
+                "application/vnd.docker.distribution.manifest.v2+json",
+                new BlobDescriptor("application/vnd.docker.container.image.v1+json", config.getSize(), config.getDigest()),
+                layers.stream()
+                        .map(item -> new BlobDescriptor("application/vnd.docker.image.rootfs.diff.tar.gzip", item.getSize(), item.getDigest()))
+                        .collect(Collectors.toList()));
     }
 
     public Manifest getManifest() {
