@@ -97,6 +97,7 @@ class JdkApiClientTest {
 
         @Test
         void name3() {
+            ManifestDescriptor manifestDescriptor = apiClient.getManifest(reference);
             apiClient.deleteManifest(reference);
         }
 

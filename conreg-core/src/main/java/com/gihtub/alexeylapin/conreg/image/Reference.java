@@ -2,6 +2,7 @@ package com.gihtub.alexeylapin.conreg.image;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.With;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -25,11 +26,22 @@ public interface Reference {
 
     String getTagOrDigest();
 
+    Reference withRegistry(String registry);
+
+    Reference withNamespace(String namespace);
+
+    Reference withName(String name);
+
+    Reference withTag(String tag);
+
+    Reference withDigest(String digest);
+
     static Reference of(String s) {
         return DefaultReference.parse(s);
     }
 
     @Getter
+    @With
     class DefaultReference implements Reference {
 
         // @formatter:off

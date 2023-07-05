@@ -51,6 +51,16 @@ public class DefaultRegistryClientTest {
     }
 
     @Test
+    void name2() {
+        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
+        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
+
+        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations, fileOperations);
+
+        registryClient.pull(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
+    }
+
+    @Test
     void name3() {
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
         FileOperations fileOperations = new DefaultFileOperations(jsonCodec);

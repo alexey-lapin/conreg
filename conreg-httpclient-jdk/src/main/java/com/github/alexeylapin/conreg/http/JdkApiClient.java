@@ -113,7 +113,7 @@ public class JdkApiClient implements ApiClient {
                 .PUT(HttpRequest.BodyPublishers.ofString(jsonCodec.encode(manifestDescriptor)));
         withAuth(reference,
                 requestBuilder,
-                HttpResponse.BodyHandlers.discarding(),
+                HttpResponse.BodyHandlers.ofString(),
                 Action.PUSH,
                 RESPONSE_PREDICATE_SUCCESS);
     }
@@ -130,7 +130,7 @@ public class JdkApiClient implements ApiClient {
                 .DELETE();
         withAuth(reference,
                 requestBuilder,
-                HttpResponse.BodyHandlers.discarding(),
+                HttpResponse.BodyHandlers.ofString(),
                 Action.PUSH,
                 RESPONSE_PREDICATE_SUCCESS);
     }
@@ -144,9 +144,9 @@ public class JdkApiClient implements ApiClient {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(createURI(uri))
                 .POST(HttpRequest.BodyPublishers.noBody());
-        HttpResponse<Void> response = withAuth(reference,
+        HttpResponse<String> response = withAuth(reference,
                 requestBuilder,
-                HttpResponse.BodyHandlers.discarding(),
+                HttpResponse.BodyHandlers.ofString(),
                 Action.PUSH,
                 RESPONSE_PREDICATE_SUCCESS);
         String location = response.headers().firstValue("location")
@@ -164,7 +164,7 @@ public class JdkApiClient implements ApiClient {
                 .DELETE();
         withAuth(reference,
                 requestBuilder,
-                HttpResponse.BodyHandlers.discarding(),
+                HttpResponse.BodyHandlers.ofString(),
                 Action.PUSH,
                 RESPONSE_PREDICATE_SUCCESS);
     }
@@ -179,9 +179,9 @@ public class JdkApiClient implements ApiClient {
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(createURI(uri))
                 .method("HEAD", HttpRequest.BodyPublishers.noBody());
-        HttpResponse<Void> response = withAuth(reference,
+        HttpResponse<String> response = withAuth(reference,
                 requestBuilder,
-                HttpResponse.BodyHandlers.discarding(),
+                HttpResponse.BodyHandlers.ofString(),
                 Action.PULL,
                 RESPONSE_PREDICATE_SUCCESS_OR_404);
         return response.statusCode() == 200;
@@ -270,7 +270,12 @@ public class JdkApiClient implements ApiClient {
 
     private static void validateResponse(Predicate<HttpResponse<?>> responsePredicate, HttpResponse<?> response) {
         if (!responsePredicate.test(response)) {
-            throw new RuntimeException("unexpected status code: " + response.statusCode());
+            Object body = response.body();
+            String message = "unexpected status code: " + response.statusCode();
+            if (body instanceof String) {
+                message += ", body: " + body;
+            }
+            throw new RuntimeException(message);
         }
     }
 

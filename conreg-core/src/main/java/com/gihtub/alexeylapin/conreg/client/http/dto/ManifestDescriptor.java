@@ -17,4 +17,8 @@ public class ManifestDescriptor {
     private BlobDescriptor config;
     private List<BlobDescriptor> layers;
 
+    public String getDigest() {
+        return config.getDigest();
+    }
+
 }
