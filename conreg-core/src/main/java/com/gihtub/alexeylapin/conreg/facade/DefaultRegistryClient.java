@@ -2,6 +2,8 @@ package com.gihtub.alexeylapin.conreg.facade;
 
 import com.gihtub.alexeylapin.conreg.image.Image;
 import com.gihtub.alexeylapin.conreg.image.Reference;
+import com.gihtub.alexeylapin.conreg.io.ImageLoader;
+import com.gihtub.alexeylapin.conreg.io.ImageSaver;
 import com.gihtub.alexeylapin.conreg.io.TarInputStreamImageLoader;
 import com.gihtub.alexeylapin.conreg.io.TarOutputStreamImageSaver;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
@@ -35,7 +37,7 @@ public class DefaultRegistryClient implements RegistryClient {
     @Override
     public void pull(Reference reference, OutputStream outputStream) {
         Image image = registryOperations.pull(reference);
-        try (TarOutputStreamImageSaver imageSaver = new TarOutputStreamImageSaver(jsonCodec, outputStream)) {
+        try (ImageSaver imageSaver = new TarOutputStreamImageSaver(jsonCodec, outputStream)) {
             imageSaver.save(image);
         }
     }
@@ -51,8 +53,8 @@ public class DefaultRegistryClient implements RegistryClient {
     @SneakyThrows
     @Override
     public void push(InputStream inputStream, Reference reference) {
-        try (TarInputStreamImageLoader imageLoader =
-                     new TarInputStreamImageLoader(jsonCodec, inputStream, Files.createTempDirectory("conreg-"))) {
+        Path tempDirectory = Files.createTempDirectory("conreg-");
+        try (ImageLoader imageLoader = new TarInputStreamImageLoader(jsonCodec, inputStream, tempDirectory)) {
             Image image = imageLoader.load();
             registryOperations.push(reference, image);
         }
