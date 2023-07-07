@@ -1,4 +1,4 @@
-package com.gihtub.alexeylapin.conreg;
+package com.gihtub.alexeylapin.conreg.facade;
 
 import com.gihtub.alexeylapin.conreg.image.Reference;
 
@@ -15,5 +15,7 @@ public interface RegistryClient {
     void push(Path path, Reference reference);
 
     void push(InputStream inputStream, Reference reference);
+
+    void copy(Reference source, Reference target);
 
 }

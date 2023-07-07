@@ -1,11 +1,12 @@
 package com.gihtub.alexeylapin.conreg.io;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
 @FunctionalInterface
 public interface ThrowingSupplier<T> {
 
-    T get() throws Exception;
+    T get() throws IOException;
 
     default Supplier<T> unchecked() {
         return this::sneakyThrow;

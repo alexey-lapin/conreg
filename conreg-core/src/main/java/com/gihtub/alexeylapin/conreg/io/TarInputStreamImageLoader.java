@@ -5,53 +5,36 @@ import com.gihtub.alexeylapin.conreg.image.Image;
 import com.gihtub.alexeylapin.conreg.image.Manifest;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
+import lombok.SneakyThrows;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.utils.IOUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
-import static org.apache.commons.compress.utils.IOUtils.copy;
-
-public class DefaultFileOperations implements FileOperations {
+public class TarInputStreamImageLoader implements ImageLoader {
 
     private final JsonCodec jsonCodec;
+    private final InputStream inputStream;
+    private final Path tmp;
 
-    public DefaultFileOperations(JsonCodec jsonCodec) {
+    @SneakyThrows
+    public TarInputStreamImageLoader(JsonCodec jsonCodec, InputStream inputStream, Path tmpDir) {
         this.jsonCodec = jsonCodec;
+        this.inputStream = inputStream;
+        this.tmp = Files.createDirectories(tmpDir);
     }
 
     @Override
-    public void save(Image image, OutputStream outputStream) {
-        try (TarArchiveOutputStream tos = new TarArchiveOutputStream(outputStream)) {
-            TarArchiveEntry manifestEntry = new TarArchiveEntry(MANIFEST);
-            byte[] manifestBytes = jsonCodec.encode(image.getManifest()).getBytes(StandardCharsets.UTF_8);
-            manifestEntry.setSize(manifestBytes.length);
-            tos.putArchiveEntry(manifestEntry);
-            tos.write(manifestBytes);
-            tos.closeArchiveEntry();
-            for (Blob blob : image.getBlobs()) {
-                TarArchiveEntry blobEntry = new TarArchiveEntry(blob.getName());
-                blobEntry.setSize(blob.getSize());
-                tos.putArchiveEntry(blobEntry);
-                try (InputStream is = blob.getContent().get()) {
-                    copy(is, tos);
-                }
-                tos.closeArchiveEntry();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Image load(InputStream inputStream) {
+    public Image load() throws IOException {
         try (TarArchiveInputStream tis = new TarArchiveInputStream(inputStream)) {
             Manifest manifest = null;
             Blob config = null;
@@ -62,24 +45,23 @@ public class DefaultFileOperations implements FileOperations {
                     continue;
                 }
                 if (!tis.canReadEntryData(entry)) {
-                    throw new IOException("read tar entry error");
+                    throw new IOException("tar entry is not readable");
                 }
                 String name = entry.getName();
                 String[] parts = name.split("\\.");
 
-//                Path itemPath = dst.resolve(name);
+                Path itemPath = tmp.resolve(name);
                 if (parts.length == 2) {
+                    Files.copy(tis, itemPath);
                     if ("json".equalsIgnoreCase(parts[1])) {
                         if ("manifest".equalsIgnoreCase(parts[0])) {
-                            byte[] bytes = new byte[(int) entry.getSize()];
-                            IOUtils.readFully(tis, bytes);
-                            String manifestString = new String(bytes, StandardCharsets.UTF_8);
+                            String manifestString = new String(Files.readAllBytes(itemPath), StandardCharsets.UTF_8);
                             manifest = jsonCodec.decode(manifestString, Manifest.class);
                         } else {
-                            config = Blob.ofJson(parts[0], entry.getSize(), () -> null);
+                            config = Blob.ofJson(digest(parts[0]), entry.getSize(), () -> Files.newInputStream(itemPath));
                         }
                     } else {
-                        layers.add(Blob.ofTar(parts[0], entry.getSize(), () -> null));
+                        layers.add(Blob.ofTar(digest(parts[0]), entry.getSize(), () -> Files.newInputStream(itemPath)));
                     }
                 }
             }
@@ -91,9 +73,20 @@ public class DefaultFileOperations implements FileOperations {
                 }
             }
             return new Image(reference, config, layers);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        try (Stream<Path> stream = Files.walk(tmp)) {
+            stream.sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
+    }
+
+    private static String digest(String name) {
+        return "sha256:" + name;
     }
 
 }

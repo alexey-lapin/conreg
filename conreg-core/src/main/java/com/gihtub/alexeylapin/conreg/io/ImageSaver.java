@@ -4,8 +4,8 @@ import com.gihtub.alexeylapin.conreg.image.Image;
 
 import java.io.IOException;
 
-public interface ImageLoader extends FileOperations {
+public interface ImageSaver extends FileOperations {
 
-    Image load() throws IOException;
+    void save(Image image) throws IOException;
 
 }

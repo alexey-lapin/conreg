@@ -9,7 +9,6 @@ import com.gihtub.alexeylapin.conreg.image.Reference;
 
 import java.net.URI;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class DefaultRegistryOperations implements RegistryOperations {

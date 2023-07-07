@@ -2,8 +2,6 @@ package com.github.alexeylapin.conreg;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gihtub.alexeylapin.conreg.DefaultRegistryClient;
-import com.gihtub.alexeylapin.conreg.RegistryClient;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
@@ -11,9 +9,9 @@ import com.gihtub.alexeylapin.conreg.client.http.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.NoopTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
+import com.gihtub.alexeylapin.conreg.facade.DefaultRegistryClient;
+import com.gihtub.alexeylapin.conreg.facade.RegistryClient;
 import com.gihtub.alexeylapin.conreg.image.Reference;
-import com.gihtub.alexeylapin.conreg.io.DefaultFileOperations;
-import com.gihtub.alexeylapin.conreg.io.FileOperations;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.TokenDtoMixin;
@@ -53,9 +51,8 @@ public class DefaultRegistryClientTest {
     @Test
     void name2() {
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 
-        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations, fileOperations);
+        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
 
         registryClient.pull(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
     }
@@ -63,9 +60,8 @@ public class DefaultRegistryClientTest {
     @Test
     void name3() {
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 
-        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations, fileOperations);
+        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
 
         registryClient.pull(Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
     }
@@ -73,9 +69,8 @@ public class DefaultRegistryClientTest {
     @Test
     void name4() {
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-        FileOperations fileOperations = new DefaultFileOperations(jsonCodec);
 
-        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations, fileOperations);
+        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
 
         registryClient.push(Paths.get("mic-prox.tar"), Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:test-2"));
     }
