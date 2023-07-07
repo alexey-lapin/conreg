@@ -31,6 +31,7 @@ public class DefaultRegistryClientTest {
     private HttpClient httpClient;
     private JsonCodec jsonCodec;
     private ApiClient apiClient;
+    private RegistryClient registryClient;
 
     @BeforeEach
     void setUp() {
@@ -46,33 +47,30 @@ public class DefaultRegistryClientTest {
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
         apiClient = new JdkApiClient(registryResolver, httpClient, jsonCodec, authenticationProvider, new NoopTokenStore());
+
+        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
+
+        registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
     }
 
     @Test
     void name2() {
-        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-
-        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
-
         registryClient.pull(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
     }
 
     @Test
     void name3() {
-        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-
-        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
-
         registryClient.pull(Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
     }
 
     @Test
     void name4() {
-        RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-
-        RegistryClient registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
-
         registryClient.push(Paths.get("mic-prox.tar"), Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:test-2"));
+    }
+
+    @Test
+    void name5() {
+        registryClient.copy(Reference.of("alpine"), Reference.of("localhost:5000/alpine"));
     }
 
 }
