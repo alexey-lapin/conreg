@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
-import com.gihtub.alexeylapin.conreg.client.http.WellKnownRegistries;
+import com.gihtub.alexeylapin.conreg.facade.RegistryClients;
+import com.gihtub.alexeylapin.conreg.facade.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.NoopTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
@@ -71,6 +72,12 @@ public class DefaultRegistryClientTest {
     @Test
     void name5() {
         registryClient.copy(Reference.of("alpine"), Reference.of("localhost:5000/alpine"));
+    }
+
+    @Test
+    void name6() {
+        RegistryClient client = RegistryClients.defaultClient();
+        System.out.println();
     }
 
 }

@@ -39,7 +39,8 @@ public class JdkApiClient implements ApiClient {
 
     public JdkApiClient(RegistryResolver registryResolver,
                         HttpClient httpClient,
-                        JsonCodec jsonCodec, AuthenticationProvider authenticationProvider,
+                        JsonCodec jsonCodec,
+                        AuthenticationProvider authenticationProvider,
                         TokenStore tokenStore) {
         this.registryResolver = registryResolver;
         this.httpClient = httpClient;

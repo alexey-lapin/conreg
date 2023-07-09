@@ -1,4 +1,6 @@
-package com.gihtub.alexeylapin.conreg.client.http;
+package com.gihtub.alexeylapin.conreg.facade;
+
+import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 
 import java.util.HashMap;
 import java.util.Map;
