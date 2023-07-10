@@ -28,22 +28,23 @@ public class JdkApiClient implements ApiClient {
 
     private static final Predicate<HttpResponse<?>> RESPONSE_PREDICATE_SUCCESS =
             response -> response.statusCode() < 300;
+
     private static final Predicate<HttpResponse<?>> RESPONSE_PREDICATE_SUCCESS_OR_404 =
             RESPONSE_PREDICATE_SUCCESS.or(response -> response.statusCode() == 404);
 
-    private final RegistryResolver registryResolver;
     private final HttpClient httpClient;
+    private final RegistryResolver registryResolver;
     private final JsonCodec jsonCodec;
     private final AuthenticationProvider authenticationProvider;
     private final TokenStore tokenStore;
 
-    public JdkApiClient(RegistryResolver registryResolver,
-                        HttpClient httpClient,
+    public JdkApiClient(HttpClient httpClient,
+                        RegistryResolver registryResolver,
                         JsonCodec jsonCodec,
                         AuthenticationProvider authenticationProvider,
                         TokenStore tokenStore) {
-        this.registryResolver = registryResolver;
         this.httpClient = httpClient;
+        this.registryResolver = registryResolver;
         this.jsonCodec = jsonCodec;
         this.authenticationProvider = authenticationProvider;
         this.tokenStore = tokenStore;

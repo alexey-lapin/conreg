@@ -47,7 +47,10 @@ public interface RegistryClients {
                 registryResolver = new WellKnownRegistries();
             }
             if (apiClient == null) {
-
+                for (ApiClientBuilder<?> apiClientBuilder : ServiceLoader.load(ApiClientBuilder.class)) {
+                    apiClient = apiClientBuilder.jsonCodec(jsonCodec).build();
+                    break;
+                }
             }
             if (registryOperations == null) {
 

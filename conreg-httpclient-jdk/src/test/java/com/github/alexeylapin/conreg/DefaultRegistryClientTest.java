@@ -47,7 +47,7 @@ public class DefaultRegistryClientTest {
         jsonCodec = new JacksonJsonCodec(objectMapper);
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
-        apiClient = new JdkApiClient(registryResolver, httpClient, jsonCodec, authenticationProvider, new NoopTokenStore());
+        apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new NoopTokenStore());
 
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
 
