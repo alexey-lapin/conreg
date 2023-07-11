@@ -13,14 +13,14 @@ public class JacksonJsonCodecFactory implements JsonCodecFactory {
     private final boolean enabled;
 
     public JacksonJsonCodecFactory() {
-        boolean isObjectMappedLoadable;
+        boolean isObjectMapperLoadable;
         try {
             Class.forName("com.fasterxml.jackson.databind.ObjectMapper");
-            isObjectMappedLoadable = true;
+            isObjectMapperLoadable = true;
         } catch (ClassNotFoundException e) {
-            isObjectMappedLoadable = false;
+            isObjectMapperLoadable = false;
         }
-        this.enabled = isObjectMappedLoadable;
+        this.enabled = isObjectMapperLoadable;
     }
 
     @Override

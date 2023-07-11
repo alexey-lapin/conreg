@@ -1,1 +1,2 @@
 com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodecFactory
+com.gihtub.alexeylapin.conreg.json.gson.GsonJsonCodecFactory
