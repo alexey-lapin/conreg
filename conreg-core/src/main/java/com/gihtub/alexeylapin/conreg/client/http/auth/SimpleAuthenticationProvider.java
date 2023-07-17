@@ -14,7 +14,7 @@ public class SimpleAuthenticationProvider implements AuthenticationProvider {
 
     @Override
     public Optional<String> getForRegistry(Registry registry) {
-        return Optional.ofNullable(auths.get(registry)).map(Auth::getAuth);
+        return Optional.ofNullable(auths.get(registry)).map(Auth::getValue);
     }
 
 }

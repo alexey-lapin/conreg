@@ -30,7 +30,7 @@ public class GsonJsonCodecFactory implements JsonCodecFactory {
 
     private static JsonCodec createCodec() {
         Gson gson = new GsonBuilder()
-                .registerTypeAdapter(TokenDto.class, new TokenDtoAdapter())
+                .registerTypeAdapter(TokenDto.class, new TokenDtoTypeAdapter())
                 .create();
         return new GsonJsonCodec(gson);
     }

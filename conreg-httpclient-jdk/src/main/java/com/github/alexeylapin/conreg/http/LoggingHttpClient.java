@@ -10,8 +10,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class LoggingHttpClient extends HttpClient {
 
     @NonNull

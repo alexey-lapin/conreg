@@ -7,16 +7,20 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
-public class TokenDtoAdapter extends TypeAdapter<TokenDto> {
+public class TokenDtoTypeAdapter extends TypeAdapter<TokenDto> {
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     @Override
     public void write(JsonWriter out, TokenDto src) throws IOException {
         out.beginObject();
         out.name("token").value(src.getToken());
-        out.name("access_token").value(src.getAccessToken());
-        out.name("expires_in").value(src.getExpiresIn());
-        out.name("issued_at").value(src.getIssuedAt());
+        out.name("access_token").value(src.getAccessToken().orElse(null));
+        out.name("expires_in").value(src.getExpiresIn().orElse(null));
+        out.name("issued_at").value(src.getIssuedAt().map(FORMATTER::format).orElse(null));
         out.endObject();
     }
 
@@ -44,7 +48,7 @@ public class TokenDtoAdapter extends TypeAdapter<TokenDto> {
                     target.setExpiresIn(in.nextInt());
                     break;
                 case "issued_at":
-                    target.setIssuedAt(in.nextString());
+                    target.setIssuedAt(FORMATTER.parse(in.nextString(), ZonedDateTime::from));
                     break;
                 default:
                     in.skipValue();

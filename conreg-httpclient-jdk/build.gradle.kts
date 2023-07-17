@@ -17,7 +17,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.1")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
     testImplementation("com.google.code.gson:gson:2.10.1")
 
     testImplementation("org.slf4j:jul-to-slf4j:2.0.5")

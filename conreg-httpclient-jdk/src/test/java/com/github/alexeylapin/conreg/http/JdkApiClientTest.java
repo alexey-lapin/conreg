@@ -3,11 +3,12 @@ package com.github.alexeylapin.conreg.http;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
+import com.gihtub.alexeylapin.conreg.client.http.auth.DefaultTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
-import com.gihtub.alexeylapin.conreg.client.http.auth.NoopTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.facade.WellKnownRegistries;
@@ -47,23 +48,24 @@ class JdkApiClientTest {
 
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .registerModule(new JavaTimeModule())
                 .addMixIn(TokenDto.class, TokenDtoMixin.class);
         jsonCodec = new JacksonJsonCodec(objectMapper);
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
-        apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new NoopTokenStore());
+        apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());
     }
 
     @Test
     void name1() {
-        ManifestDescriptor manifest = apiClient.getManifest(Reference.of("alpine"));
-        System.out.println(manifest);
+        ManifestDescriptor manifestDescriptor = apiClient.getManifest(Reference.of("alpine"));
+        System.out.println(manifestDescriptor);
     }
 
     @Test
     void name2() {
-        ManifestDescriptor manifest = apiClient.getManifest(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy"));
-        System.out.println(manifest);
+        ManifestDescriptor manifestDescriptor = apiClient.getManifest(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy"));
+        System.out.println(manifestDescriptor);
     }
 
 

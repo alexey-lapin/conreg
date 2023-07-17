@@ -5,13 +5,12 @@ import java.util.Optional;
 public class NoopTokenStore implements TokenStore {
 
     @Override
-    public Optional<Auth> retrieve(TokenKey key) {
-        return Optional.empty();
+    public void store(TokenKey key, Token token) {
     }
 
     @Override
-    public Auth store(TokenKey key, Token token) {
-        return null;
+    public Optional<Token> retrieve(TokenKey key) {
+        return Optional.empty();
     }
 
 }

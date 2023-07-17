@@ -1,10 +1,12 @@
 package com.gihtub.alexeylapin.conreg.client.http.auth;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
+@EqualsAndHashCode
 public class Action {
 
     public static final Action PULL = new Action("pull");

@@ -4,8 +4,8 @@ import java.util.Optional;
 
 public interface TokenStore {
 
-    Optional<Auth> retrieve(TokenKey key);
+    void store(TokenKey key, Token token);
 
-    Auth store(TokenKey key, Token token);
+    Optional<Token> retrieve(TokenKey key);
 
 }

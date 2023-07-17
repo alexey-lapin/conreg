@@ -3,9 +3,11 @@ package com.github.alexeylapin.conreg.http;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.auth.Action;
+import com.gihtub.alexeylapin.conreg.client.http.auth.Auth;
 import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.Registry;
 import com.gihtub.alexeylapin.conreg.client.http.auth.Scope;
+import com.gihtub.alexeylapin.conreg.client.http.auth.Token;
 import com.gihtub.alexeylapin.conreg.client.http.auth.TokenKey;
 import com.gihtub.alexeylapin.conreg.client.http.auth.TokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
@@ -20,6 +22,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -75,10 +78,17 @@ public class JdkApiClient implements ApiClient {
 
         TokenDto tokenDto = jsonCodec.decode(response.body(), TokenDto.class);
 
-//        for (String action : scopeMatcher.group(3).split(",")) {
-//            Scope scope = Scope.of(scopeMatcher.group(1), scopeMatcher.group(2), Action.of(action));
-//            TokenKey tokenKey = TokenKey.of(challengeMatcher.group(2), scope);
-//        }
+        for (String action : scopeMatcher.group(3).split(",")) {
+            Scope scope = Scope.of(scopeMatcher.group(1), scopeMatcher.group(2), Action.of(action));
+            TokenKey tokenKey = TokenKey.of(challengeMatcher.group(2), scope);
+            tokenStore.store(tokenKey, Token.builder()
+                    .key(tokenKey)
+                    .token(tokenDto.getToken())
+                    .accessToken(tokenDto.getAccessToken().orElse(null))
+                    .expiresIn(tokenDto.getExpiresIn().orElse(null))
+                    .issuedAt(tokenDto.getIssuedAt().orElse(ZonedDateTime.now()))
+                    .build());
+        }
 
         return Optional.of(tokenDto);
     }
@@ -86,7 +96,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public ManifestDescriptor getManifest(Reference reference) {
         String uri = String.format(URL_MANIFEST,
-                resolveRegistry(reference.getRegistry()),
+                resolveRegistryServiceUri(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName(),
                 reference.getTagOrDigest());
@@ -105,7 +115,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public void putManifest(Reference reference, ManifestDescriptor manifestDescriptor) {
         String uri = String.format(URL_MANIFEST,
-                resolveRegistry(reference.getRegistry()),
+                resolveRegistryServiceUri(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName(),
                 reference.getTagOrDigest());
@@ -123,7 +133,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public void deleteManifest(Reference reference) {
         String uri = String.format(URL_MANIFEST,
-                resolveRegistry(reference.getRegistry()),
+                resolveRegistryServiceUri(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName(),
                 reference.getTagOrDigest());
@@ -140,7 +150,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public URI startPush(Reference reference) {
         String uri = String.format(URL_BLOB_UPLOAD,
-                resolveRegistry(reference.getRegistry()),
+                resolveRegistryServiceUri(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName());
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
@@ -156,7 +166,7 @@ public class JdkApiClient implements ApiClient {
         if (location.startsWith(SCHEMA_HTTP)) {
             return createURI(location);
         }
-        return createURI(resolveRegistry(reference.getRegistry()) + location);
+        return createURI(resolveRegistryServiceUri(reference.getRegistry()) + location);
     }
 
     @Override
@@ -174,7 +184,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public boolean isBlobExists(Reference reference, String digest) {
         String uri = String.format(URL_BLOB,
-                resolveRegistry(reference.getRegistry()),
+                resolveRegistryServiceUri(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName(),
                 digest);
@@ -192,7 +202,7 @@ public class JdkApiClient implements ApiClient {
     @Override
     public InputStream getBlob(Reference reference, String digest) {
         String uri = String.format(URL_BLOB,
-                resolveRegistry(reference.getRegistry()),
+                resolveRegistryServiceUri(reference.getRegistry()),
                 reference.getNamespace(),
                 reference.getName(),
                 digest);
@@ -233,9 +243,10 @@ public class JdkApiClient implements ApiClient {
                                          Action action,
                                          Predicate<HttpResponse<?>> responsePredicate) {
         HttpRequest.Builder builder = requestBuilder.copy();
-        TokenKey key = TokenKey.of(resolveRegistry(reference.getRegistry()), Scope.repository(reference, action));
-        tokenStore.retrieve(key).ifPresent(auth -> {
-            builder.setHeader("authorization", auth.getAuth());
+        String serviceName = registryResolver.resolve(reference.getRegistry()).getServiceName();
+        TokenKey key = TokenKey.of(serviceName, Scope.repository(reference, action));
+        tokenStore.retrieve(key).ifPresent(token -> {
+            builder.setHeader("authorization", Auth.bearer(token.getToken()).getValue());
         });
         HttpResponse<T> response = httpClient.send(builder.build(), bodyHandler);
         if (response.statusCode() == 401) {
@@ -245,9 +256,7 @@ public class JdkApiClient implements ApiClient {
                 Optional<TokenDto> tokenOptional = authenticate(reference.getRegistry(), challenge);
                 if (tokenOptional.isPresent()) {
                     TokenDto tokenDto = tokenOptional.get();
-//                    Auth auth = tokenStore.store(Registry.of(registry), null);
-//                    builder.setHeader("authorization", auth.getAuth());
-                    builder.setHeader("authorization", "Bearer " + tokenDto.getToken());
+                    builder.setHeader("authorization", Auth.bearer(tokenDto.getToken()).getValue());
                     response = httpClient.send(builder.build(), bodyHandler);
                 }
             }
@@ -266,8 +275,8 @@ public class JdkApiClient implements ApiClient {
         return new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), query, uri.getFragment());
     }
 
-    private String resolveRegistry(String registry) {
-        return registryResolver.resolve(registry);
+    private URI resolveRegistryServiceUri(String registry) {
+        return registryResolver.resolve(registry).getServiceUri();
     }
 
     private static void validateResponse(Predicate<HttpResponse<?>> responsePredicate, HttpResponse<?> response) {

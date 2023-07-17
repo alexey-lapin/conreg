@@ -1,16 +1,23 @@
 package com.github.alexeylapin.conreg;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
+import com.gihtub.alexeylapin.conreg.client.http.auth.DefaultTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.NoopTokenStore;
+import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.facade.DefaultRegistryClient;
 import com.gihtub.alexeylapin.conreg.facade.RegistryClient;
 import com.gihtub.alexeylapin.conreg.facade.RegistryClients;
 import com.gihtub.alexeylapin.conreg.facade.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
+import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
+import com.gihtub.alexeylapin.conreg.json.jackson.TokenDtoMixin;
 import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
 import com.github.alexeylapin.conreg.http.JdkApiClient;
@@ -36,17 +43,23 @@ public class DefaultRegistryClientTest {
         HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
         httpClient = new LoggingHttpClient(actualHttpClient);
 
-//        ObjectMapper objectMapper = new ObjectMapper()
-//                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-//                .addMixIn(TokenDto.class, TokenDtoMixin.class);
-//        jsonCodec = new JacksonJsonCodec(objectMapper);
+        ObjectMapper objectMapper = new ObjectMapper()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .registerModule(new JavaTimeModule())
+                .addMixIn(TokenDto.class, TokenDtoMixin.class);
+        jsonCodec = new JacksonJsonCodec(objectMapper);
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
-        apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new NoopTokenStore());
+        apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());
 
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
 
         registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
+    }
+
+    @Test
+    void name1() {
+        registryClient.pull(Reference.of("alpine"), Paths.get("alpine.tar"));
     }
 
     @Test
