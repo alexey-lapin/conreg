@@ -2,6 +2,7 @@ package com.gihtub.alexeylapin.conreg.json.jackson;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.facade.factory.JsonCodecFactory;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
@@ -13,14 +14,15 @@ public class JacksonJsonCodecFactory implements JsonCodecFactory {
     private final boolean enabled;
 
     public JacksonJsonCodecFactory() {
-        boolean isObjectMapperLoadable;
+        boolean isJacksonLoadable;
         try {
             Class.forName("com.fasterxml.jackson.databind.ObjectMapper");
-            isObjectMapperLoadable = true;
+            Class.forName("com.fasterxml.jackson.datatype.jsr310.JavaTimeModule");
+            isJacksonLoadable = true;
         } catch (ClassNotFoundException e) {
-            isObjectMapperLoadable = false;
+            isJacksonLoadable = false;
         }
-        this.enabled = isObjectMapperLoadable;
+        this.enabled = isJacksonLoadable;
     }
 
     @Override
@@ -31,6 +33,7 @@ public class JacksonJsonCodecFactory implements JsonCodecFactory {
     private static JsonCodec createCodec() {
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .registerModule(new JavaTimeModule())
                 .addMixIn(TokenDto.class, TokenDtoMixin.class);
         return new JacksonJsonCodec(objectMapper);
     }

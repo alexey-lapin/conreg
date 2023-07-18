@@ -1,21 +1,16 @@
 package com.github.alexeylapin.conreg.http;
 
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
 import com.gihtub.alexeylapin.conreg.client.http.auth.DefaultTokenStore;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
-import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.facade.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
-import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodec;
-import com.gihtub.alexeylapin.conreg.json.jackson.TokenDtoMixin;
+import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodecFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -46,11 +41,7 @@ class JdkApiClientTest {
         HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
         httpClient = new LoggingHttpClient(actualHttpClient);
 
-        ObjectMapper objectMapper = new ObjectMapper()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .registerModule(new JavaTimeModule())
-                .addMixIn(TokenDto.class, TokenDtoMixin.class);
-        jsonCodec = new JacksonJsonCodec(objectMapper);
+        jsonCodec = new JacksonJsonCodecFactory().create().orElseThrow();
 
         FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
         apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());

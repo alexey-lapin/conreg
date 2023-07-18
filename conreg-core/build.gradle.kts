@@ -13,7 +13,8 @@ dependencies {
 
     implementation("org.apache.commons:commons-compress:1.21")
 
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.15.1")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.15.2")
+    compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
     compileOnly("com.google.code.gson:gson:2.10.1")
 
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
