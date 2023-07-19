@@ -12,7 +12,7 @@ class FileAuthenticationProviderTest {
 
     @Test
     void name() {
-        FileAuthenticationProvider holder = new WellKnownFileAuthHolders()
+        FileAuthenticationProvider holder = new WellKnownFileAuthenticationProviderFactory()
                 .create(new JacksonJsonCodec(new ObjectMapper()))
                 .orElseThrow();
         Optional<String> forRegistry = holder.getForRegistry(Registry.of("ghcr.io"));

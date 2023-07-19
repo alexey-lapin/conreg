@@ -1,5 +1,6 @@
 package com.gihtub.alexeylapin.conreg.client.http;
 
+import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 
@@ -11,23 +12,25 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class WellKnownFileAuthHolders {
+public class WellKnownFileAuthenticationProviderFactory {
 
     private final Set<Path> paths;
 
-    public WellKnownFileAuthHolders() {
+    public WellKnownFileAuthenticationProviderFactory() {
         this(defaultPaths());
     }
 
-    public WellKnownFileAuthHolders(Set<Path> paths) {
+    public WellKnownFileAuthenticationProviderFactory(Set<Path> paths) {
         this.paths = paths;
     }
 
-    public Optional<FileAuthenticationProvider> create(JsonCodec jsonCodec) {
+    public Optional<AuthenticationProvider> create(JsonCodec jsonCodec) {
         Set<Path> existingPaths = paths.stream()
                 .filter(Files::exists)
                 .collect(Collectors.toSet());
-        return existingPaths.isEmpty() ? Optional.empty() : Optional.of(new FileAuthenticationProvider(jsonCodec, existingPaths));
+        return existingPaths.isEmpty() ?
+                Optional.empty() :
+                Optional.of(new FileAuthenticationProvider(jsonCodec, existingPaths));
     }
 
     public static Set<Path> defaultPaths() {

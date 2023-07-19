@@ -2,9 +2,9 @@ package com.github.alexeylapin.conreg;
 
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
-import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthHolders;
+import com.gihtub.alexeylapin.conreg.client.http.WellKnownFileAuthenticationProviderFactory;
+import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.DefaultTokenStore;
-import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.facade.DefaultRegistryClient;
 import com.gihtub.alexeylapin.conreg.facade.RegistryClient;
 import com.gihtub.alexeylapin.conreg.facade.RegistryClients;
@@ -39,7 +39,7 @@ public class DefaultRegistryClientTest {
 
         jsonCodec = new JacksonJsonCodecFactory().create().orElseThrow();
 
-        FileAuthenticationProvider authenticationProvider = new WellKnownFileAuthHolders().create(jsonCodec).orElseThrow();
+        AuthenticationProvider authenticationProvider = new WellKnownFileAuthenticationProviderFactory().create(jsonCodec).orElseThrow();
         apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());
 
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);

@@ -1,11 +1,9 @@
 package com.gihtub.alexeylapin.conreg.facade;
 
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
-import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
-import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
-import com.gihtub.alexeylapin.conreg.client.http.auth.TokenStore;
 import com.gihtub.alexeylapin.conreg.facade.factory.JsonCodecFactory;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
+import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
 
 import java.util.Optional;
@@ -24,9 +22,6 @@ public interface RegistryClients {
     class RegistryClientBuilder {
 
         private JsonCodec jsonCodec;
-        private RegistryResolver registryResolver;
-        private AuthenticationProvider authenticationProvider;
-        private TokenStore tokenStore;
         private ApiClient apiClient;
         private RegistryOperations registryOperations;
 
@@ -43,9 +38,6 @@ public interface RegistryClients {
                     throw new IllegalStateException("no json codec found");
                 }
             }
-            if (registryResolver == null) {
-                registryResolver = new WellKnownRegistries();
-            }
             if (apiClient == null) {
                 for (ApiClientBuilder<?> apiClientBuilder : ServiceLoader.load(ApiClientBuilder.class)) {
                     apiClient = apiClientBuilder.jsonCodec(jsonCodec).build();
@@ -53,7 +45,7 @@ public interface RegistryClients {
                 }
             }
             if (registryOperations == null) {
-
+                registryOperations = new DefaultRegistryOperations(apiClient);
             }
             return new DefaultRegistryClient(jsonCodec, registryOperations);
         }
