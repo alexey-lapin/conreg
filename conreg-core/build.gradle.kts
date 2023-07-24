@@ -8,19 +8,24 @@ java {
 }
 
 dependencies {
-    annotationProcessor("org.projectlombok:lombok:1.18.26")
-    implementation("org.projectlombok:lombok:1.18.26")
+    annotationProcessor(libs.lombok)
+    compileOnly(libs.lombok)
+
+    api(libs.slf4j.api)
 
     implementation("org.apache.commons:commons-compress:1.21")
 
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
-    compileOnly("com.google.code.gson:gson:2.10.1")
+    compileOnly(libs.jackson.databind)
+    compileOnly(libs.jackson.datatype.jsr310)
+    compileOnly(libs.gson)
 
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.assertj:assertj-core:3.24.2")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.1")
+    testImplementation(libs.jackson.databind)
+    testImplementation(libs.jackson.datatype.jsr310)
+    testImplementation(libs.gson)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.assertj.core)
+
+    testRuntimeOnly(libs.logback.classic)
 }
 
 tasks.compileTestJava {

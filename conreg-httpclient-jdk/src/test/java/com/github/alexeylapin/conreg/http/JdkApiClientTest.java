@@ -14,19 +14,11 @@ import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodecFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 
 class JdkApiClientTest {
-
-    static {
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
-    }
 
     private RegistryResolver registryResolver;
     private HttpClient httpClient;
@@ -35,7 +27,6 @@ class JdkApiClientTest {
 
     @BeforeEach
     void setUp() {
-        Logger logger = LoggerFactory.getLogger(JdkApiClientTest.class);
         registryResolver = new WellKnownRegistries();
 
         HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();

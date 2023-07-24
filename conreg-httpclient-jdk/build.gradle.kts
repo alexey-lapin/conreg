@@ -8,21 +8,23 @@ java {
 }
 
 dependencies {
-    annotationProcessor("org.projectlombok:lombok:1.18.26")
-    compileOnly("org.projectlombok:lombok:1.18.26")
+    annotationProcessor(libs.lombok)
+    compileOnly(libs.lombok)
 
     implementation(project(":conreg-core"))
-    implementation("org.slf4j:jul-to-slf4j:2.0.5")
 
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.jackson.databind)
+    testImplementation(libs.jackson.datatype.jsr310)
+    testImplementation(libs.gson)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.assertj.core)
 
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
-    testImplementation("com.google.code.gson:gson:2.10.1")
+    testRuntimeOnly(libs.logback.classic)
+}
 
-    testImplementation("org.slf4j:jul-to-slf4j:2.0.5")
-    testImplementation("ch.qos.logback:logback-classic:1.4.7")
+tasks.compileTestJava {
+    targetCompatibility = JavaVersion.VERSION_17.toString()
+    sourceCompatibility = JavaVersion.VERSION_17.toString()
 }
 
 tasks.test {
