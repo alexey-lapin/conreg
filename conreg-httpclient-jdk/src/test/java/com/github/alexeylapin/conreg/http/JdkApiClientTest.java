@@ -20,46 +20,38 @@ import java.net.http.HttpClient;
 
 class JdkApiClientTest {
 
-    private RegistryResolver registryResolver;
-    private HttpClient httpClient;
-    private JsonCodec jsonCodec;
     private ApiClient apiClient;
 
     @BeforeEach
     void setUp() {
-        registryResolver = new WellKnownRegistries();
-
-        HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-        httpClient = new LoggingHttpClient(actualHttpClient);
-
-        jsonCodec = new JacksonJsonCodecFactory().create().orElseThrow();
-
+        RegistryResolver registryResolver = new WellKnownRegistries();
+        HttpClient delegateHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
+        HttpClient httpClient = new LoggingHttpClient(delegateHttpClient);
+        JsonCodec jsonCodec = new JacksonJsonCodecFactory().create().orElseThrow();
         AuthenticationProvider authenticationProvider = new WellKnownFileAuthenticationProviderFactory().create(jsonCodec).orElseThrow();
         apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());
     }
 
     @Test
     void name1() {
-        ManifestDescriptor manifestDescriptor = apiClient.getManifest(Reference.of("alpine"));
+        Reference reference = Reference.of("alpine");
+        ManifestDescriptor manifestDescriptor = apiClient.getManifest(reference);
         System.out.println(manifestDescriptor);
     }
 
     @Test
     void name2() {
-        ManifestDescriptor manifestDescriptor = apiClient.getManifest(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy"));
+        Reference reference = Reference.of("ghcr.io/alexey-lapin/micronaut-proxy");
+        ManifestDescriptor manifestDescriptor = apiClient.getManifest(reference);
         System.out.println(manifestDescriptor);
     }
 
 
     @Test
     void name5() {
-        URI uri = apiClient.startPush(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text"));
+        Reference reference = Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text");
+        URI uri = apiClient.startPush(reference);
         System.out.println(uri);
-    }
-
-    @Test
-    void name6() {
-        apiClient.cancelPush(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:text"), URI.create("https://ghcr.io/v2/alexey-lapin/micronaut-proxy/blobs/upload/5bf5f70f-dd1d-4655-98f3-2137194de0e3"));
     }
 
     @Nested

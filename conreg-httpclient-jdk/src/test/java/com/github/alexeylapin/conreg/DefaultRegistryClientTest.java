@@ -24,52 +24,48 @@ import java.nio.file.Paths;
 
 public class DefaultRegistryClientTest {
 
-    private RegistryResolver registryResolver;
-    private HttpClient httpClient;
-    private JsonCodec jsonCodec;
-    private ApiClient apiClient;
     private RegistryClient registryClient;
 
     @BeforeEach
     void setUp() {
-        registryResolver = new WellKnownRegistries();
-
-        HttpClient actualHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
-        httpClient = new LoggingHttpClient(actualHttpClient);
-
-        jsonCodec = new JacksonJsonCodecFactory().create().orElseThrow();
-
+        RegistryResolver registryResolver = new WellKnownRegistries();
+        HttpClient delegateHttpClient = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.ALWAYS).build();
+        HttpClient httpClient = new LoggingHttpClient(delegateHttpClient);
+        JsonCodec jsonCodec = new JacksonJsonCodecFactory().create().orElseThrow();
         AuthenticationProvider authenticationProvider = new WellKnownFileAuthenticationProviderFactory().create(jsonCodec).orElseThrow();
-        apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());
-
+        ApiClient apiClient = new JdkApiClient(httpClient, registryResolver, jsonCodec, authenticationProvider, new DefaultTokenStore());
         RegistryOperations registryOperations = new DefaultRegistryOperations(apiClient);
-
         registryClient = new DefaultRegistryClient(jsonCodec, registryOperations);
     }
 
     @Test
     void name1() {
-        registryClient.pull(Reference.of("alpine"), Paths.get("alpine.tar"));
+        Reference reference = Reference.of("alpine");
+        registryClient.pull(reference, Paths.get("alpine.tar"));
     }
 
     @Test
     void name2() {
-        registryClient.pull(Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
+        Reference reference = Reference.of("ghcr.io/alexey-lapin/micronaut-proxy:0.0.5");
+        registryClient.pull(reference, Paths.get("mic-prox.tar"));
     }
 
     @Test
     void name3() {
-        registryClient.pull(Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5"), Paths.get("mic-prox.tar"));
+        Reference reference = Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:0.0.5");
+        registryClient.pull(reference, Paths.get("mic-prox.tar"));
     }
 
     @Test
     void name4() {
-        registryClient.push(Paths.get("mic-prox.tar"), Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:test-2"));
+        Reference reference = Reference.of("localhost:5000/alexey-lapin/micronaut-proxy:test-2");
+        registryClient.push(Paths.get("mic-prox.tar"), reference);
     }
 
     @Test
     void name5() {
-        registryClient.copy(Reference.of("alpine"), Reference.of("localhost:5000/alpine"));
+        Reference reference = Reference.of("alpine");
+        registryClient.copy(reference, Reference.of("localhost:5000/alpine"));
     }
 
     @Test
