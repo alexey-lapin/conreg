@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.http.HttpClient;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class DefaultRegistryClientTest {
@@ -70,8 +71,9 @@ public class DefaultRegistryClientTest {
 
     @Test
     void name6() {
-        RegistryClient client = RegistryClients.defaultClient();
-        System.out.println();
+        Path path = Paths.get(System.getProperty("user.home"), "busybox.tar");
+        Reference reference = Reference.of("localhost:5000/busybox");
+        registryClient.push(path, reference);
     }
 
 }
