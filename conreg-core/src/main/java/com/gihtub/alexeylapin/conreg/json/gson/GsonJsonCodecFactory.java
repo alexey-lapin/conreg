@@ -2,6 +2,7 @@ package com.gihtub.alexeylapin.conreg.json.gson;
 
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.facade.factory.JsonCodecFactory;
+import com.gihtub.alexeylapin.conreg.image.Manifest;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,6 +32,7 @@ public class GsonJsonCodecFactory implements JsonCodecFactory {
     private static JsonCodec createCodec() {
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(TokenDto.class, new TokenDtoTypeAdapter())
+                .registerTypeAdapter(Manifest.class, new ManifestTypeAdapter())
                 .create();
         return new GsonJsonCodec(gson);
     }

@@ -71,7 +71,7 @@ public class DefaultRegistryClientTest {
 
     @Test
     void name6() {
-        Path path = Paths.get(System.getProperty("user.home"), "busybox.tar");
+        Path path = Paths.get(System.getProperty("user.home"), "stuff", "concrane-testing", "node.tar");
         Reference reference = Reference.of("localhost:5000/busybox");
         registryClient.push(path, reference);
     }

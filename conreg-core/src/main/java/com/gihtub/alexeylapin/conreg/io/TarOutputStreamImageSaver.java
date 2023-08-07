@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 @RequiredArgsConstructor
 public class TarOutputStreamImageSaver implements ImageSaver {
@@ -22,7 +23,7 @@ public class TarOutputStreamImageSaver implements ImageSaver {
     public void save(Image image) throws IOException {
         try (TarArchiveOutputStream tos = new TarArchiveOutputStream(outputStream)) {
             TarArchiveEntry manifestEntry = new TarArchiveEntry(MANIFEST);
-            byte[] manifestBytes = jsonCodec.encode(image.getManifest()).getBytes(StandardCharsets.UTF_8);
+            byte[] manifestBytes = jsonCodec.encode(Collections.singletonList(image.getManifest())).getBytes(StandardCharsets.UTF_8);
             manifestEntry.setSize(manifestBytes.length);
             tos.putArchiveEntry(manifestEntry);
             tos.write(manifestBytes);

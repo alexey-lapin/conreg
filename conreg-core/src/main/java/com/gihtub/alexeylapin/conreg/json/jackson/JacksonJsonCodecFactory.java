@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.facade.factory.JsonCodecFactory;
+import com.gihtub.alexeylapin.conreg.image.Manifest;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 
 import java.util.Optional;
@@ -34,7 +35,8 @@ public class JacksonJsonCodecFactory implements JsonCodecFactory {
         ObjectMapper objectMapper = new ObjectMapper()
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .registerModule(new JavaTimeModule())
-                .addMixIn(TokenDto.class, TokenDtoMixin.class);
+                .addMixIn(TokenDto.class, TokenDtoMixin.class)
+                .addMixIn(Manifest.class, ManifestMixin.class);
         return new JacksonJsonCodec(objectMapper);
     }
 

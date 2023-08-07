@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -41,27 +42,34 @@ public class TarInputStreamImageLoader implements ImageLoader {
             List<Blob> layers = new ArrayList<>();
             TarArchiveEntry entry = null;
             while ((entry = tis.getNextTarEntry()) != null) {
-                if (entry.isDirectory()) {
+                if (entry.isDirectory() || entry.isSymbolicLink()) {
                     continue;
                 }
                 if (!tis.canReadEntryData(entry)) {
                     throw new IOException("tar entry is not readable");
                 }
-                String name = entry.getName();
-                String[] parts = name.split("\\.");
+                String entryName = entry.getName();
+                String fileName = Paths.get(entryName).getFileName().toString();
 
-                Path itemPath = tmp.resolve(name);
-                if (parts.length == 2) {
+                int lastIndexOfDot = fileName.lastIndexOf(".");
+                if (lastIndexOfDot > 0) {
+                    String name = fileName.substring(0, lastIndexOfDot);
+                    String ext = fileName.substring(lastIndexOfDot + 1);
+                    Path itemPath = tmp.resolve(entryName);
+                    Files.createDirectories(itemPath.getParent());
                     Files.copy(tis, itemPath);
-                    if ("json".equalsIgnoreCase(parts[1])) {
-                        if ("manifest".equalsIgnoreCase(parts[0])) {
+                    if ("json".equalsIgnoreCase(ext)) {
+                        if ("manifest".equalsIgnoreCase(name)) {
                             String manifestString = new String(Files.readAllBytes(itemPath), StandardCharsets.UTF_8);
-                            manifest = jsonCodec.decode(manifestString, Manifest.class);
+                            List<Manifest> manifests = jsonCodec.decodeList(manifestString, Manifest.class);
+                            if (manifests != null && !manifests.isEmpty()) {
+                                manifest = manifests.get(0);
+                            }
                         } else {
-                            config = Blob.ofJson(digest(parts[0]), entry.getSize(), () -> Files.newInputStream(itemPath));
+                            config = Blob.ofJson(digest(name), entry.getSize(), () -> Files.newInputStream(itemPath));
                         }
-                    } else {
-                        layers.add(Blob.ofTar(digest(parts[0]), entry.getSize(), () -> Files.newInputStream(itemPath)));
+                    } else if ("tar".equalsIgnoreCase(ext)) {
+                        layers.add(Blob.ofTar(digest(name), entry.getSize(), () -> Files.newInputStream(itemPath)));
                     }
                 }
             }
