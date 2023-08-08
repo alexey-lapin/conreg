@@ -1,10 +1,12 @@
 [versions]
 jackson = "2.15.2"
 picocli = "4.7.4"
+gradle-release-plugin = "1.15.4"
 
 [libraries]
 assertj-core = { module = "org.assertj:assertj-core", version = "3.24.2" }
 gson = { module = "com.google.code.gson:gson", version = "2.10.1" }
+gradle-release = { module = "pl.allegro.tech.build:axion-release-plugin", version.ref = "gradle-release-plugin" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.9.1" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
@@ -13,3 +15,6 @@ lombok = { module = "org.projectlombok:lombok", version = "1.18.26" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.5" }
+
+[plugins]
+release = { id = "pl.allegro.tech.build.axion-release", version.ref = "gradle-release-plugin" }

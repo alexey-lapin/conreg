@@ -1,5 +1,6 @@
 plugins {
-    id("java-library")
+    id("maven-publish")
+    id("conregbuild.java-library-conventions")
 }
 
 java {
@@ -35,4 +36,12 @@ tasks.compileTestJava {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            from(components["java"])
+        }
+    }
 }

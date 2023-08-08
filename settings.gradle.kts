@@ -1,3 +1,10 @@
+pluginManagement {
+    includeBuild("gradle/plugins")
+    repositories {
+        gradlePluginPortal()
+    }
+}
+
 dependencyResolutionManagement {
     repositories {
         mavenCentral()
