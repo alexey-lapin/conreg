@@ -1,7 +1,6 @@
 package com.github.alexeylapin.conreg.cli.command;
 
 import com.gihtub.alexeylapin.conreg.facade.RegistryClient;
-import com.gihtub.alexeylapin.conreg.facade.RegistryClients;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -20,8 +19,8 @@ public class SaveCommand extends AbstractCommand implements Runnable  {
 
     @Override
     public void run() {
-        RegistryClient client = RegistryClients.defaultClient();
-        client.pull(Reference.of(image), output);
+        RegistryClient registryClient = createRegistryClient();
+        registryClient.pull(Reference.of(image), output);
     }
 
 }

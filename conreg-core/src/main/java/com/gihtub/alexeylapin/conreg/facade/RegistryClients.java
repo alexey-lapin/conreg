@@ -5,6 +5,7 @@ import com.gihtub.alexeylapin.conreg.facade.factory.JsonCodecFactory;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.registry.DefaultRegistryOperations;
 import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
+import lombok.NonNull;
 
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -25,7 +26,22 @@ public interface RegistryClients {
         private ApiClient apiClient;
         private RegistryOperations registryOperations;
 
-        RegistryClient build() {
+        public RegistryClientBuilder jsonCodec(@NonNull JsonCodec jsonCodec) {
+            this.jsonCodec = jsonCodec;
+            return this;
+        }
+
+        public RegistryClientBuilder apiClient(@NonNull ApiClient apiClient) {
+            this.apiClient = apiClient;
+            return this;
+        }
+
+        public RegistryClientBuilder registryOperations(@NonNull RegistryOperations registryOperations) {
+            this.registryOperations = registryOperations;
+            return this;
+        }
+
+        public RegistryClient build() {
             if (jsonCodec == null) {
                 for (JsonCodecFactory jsonCodecFactory : ServiceLoader.load(JsonCodecFactory.class)) {
                     Optional<JsonCodec> jsonCodecOptional = jsonCodecFactory.create();

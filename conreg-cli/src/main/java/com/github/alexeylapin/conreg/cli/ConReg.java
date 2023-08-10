@@ -10,7 +10,8 @@ import picocli.CommandLine.Command;
         subcommands = {
                 SaveCommand.class,
                 LoadCommand.class
-        }
+        },
+        mixinStandardHelpOptions = true
 )
 public class ConReg {
 

@@ -20,8 +20,8 @@ public class LoadCommand extends AbstractCommand implements Runnable {
 
     @Override
     public void run() {
-        RegistryClient client = RegistryClients.defaultClient();
-        client.push(input, Reference.of(image));
+        RegistryClient registryClient = createRegistryClient();
+        registryClient.push(input, Reference.of(image));
     }
 
 }
