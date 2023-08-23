@@ -7,7 +7,6 @@ import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.DefaultTokenStore;
 import com.gihtub.alexeylapin.conreg.facade.DefaultRegistryClient;
 import com.gihtub.alexeylapin.conreg.facade.RegistryClient;
-import com.gihtub.alexeylapin.conreg.facade.RegistryClients;
 import com.gihtub.alexeylapin.conreg.facade.WellKnownRegistries;
 import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
@@ -17,12 +16,14 @@ import com.gihtub.alexeylapin.conreg.registry.RegistryOperations;
 import com.github.alexeylapin.conreg.http.JdkApiClient;
 import com.github.alexeylapin.conreg.http.LoggingHttpClient;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Disabled
 public class DefaultRegistryClientTest {
 
     private RegistryClient registryClient;

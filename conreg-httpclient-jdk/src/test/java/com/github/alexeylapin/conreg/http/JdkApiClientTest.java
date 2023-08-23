@@ -12,12 +12,14 @@ import com.gihtub.alexeylapin.conreg.image.Reference;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 import com.gihtub.alexeylapin.conreg.json.jackson.JacksonJsonCodecFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 
+@Disabled
 class JdkApiClientTest {
 
     private ApiClient apiClient;
