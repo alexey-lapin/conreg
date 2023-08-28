@@ -18,3 +18,4 @@ slf4j-api = { module = "org.slf4j:slf4j-api", version = "2.0.5" }
 
 [plugins]
 release = { id = "pl.allegro.tech.build.axion-release", version.ref = "gradle-release-plugin" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }

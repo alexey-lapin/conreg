@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("conregbuild.base-conventions")
+    alias(libs.plugins.shadow)
 }
 
 dependencies {
