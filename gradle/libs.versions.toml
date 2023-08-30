@@ -1,7 +1,7 @@
 [versions]
 jackson = "2.15.2"
 picocli = "4.7.4"
-gradle-release-plugin = "1.15.4"
+gradle-release-plugin = "1.15.5"
 
 [libraries]
 assertj-core = { module = "org.assertj:assertj-core", version = "3.24.2" }
