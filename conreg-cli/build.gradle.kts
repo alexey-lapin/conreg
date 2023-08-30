@@ -17,6 +17,10 @@ dependencies {
     testImplementation(libs.junit.jupiter)
 }
 
+tasks.build {
+    dependsOn(tasks.shadowJar)
+}
+
 tasks.test {
     useJUnitPlatform()
 }
