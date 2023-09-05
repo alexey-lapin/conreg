@@ -1,7 +1,12 @@
 plugins {
     id("java")
+    id("application")
     id("conregbuild.base-conventions")
     alias(libs.plugins.shadow)
+}
+
+application {
+    mainClass.set("com.github.alexeylapin.conreg.cli.ConReg")
 }
 
 dependencies {
