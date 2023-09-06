@@ -24,7 +24,7 @@ public abstract class AbstractCommand {
         protected String proxyHost;
 
         @CommandLine.Option(names = {"--proxy-port"}, required = true)
-        protected String proxyPort;
+        protected int proxyPort;
 
     }
 
@@ -37,7 +37,7 @@ public abstract class AbstractCommand {
                     .orElseThrow(() -> new RuntimeException("json codec not found"));
             HttpClient httpClient = HttpClient.newBuilder()
                     .followRedirects(HttpClient.Redirect.ALWAYS)
-                    .proxy(ProxySelector.of(new InetSocketAddress("localhost", 8888)))
+                    .proxy(ProxySelector.of(new InetSocketAddress(proxyOptions.proxyHost, proxyOptions.proxyPort)))
                     .build();
             JdkApiClient apiClient = new JdkApiClientBuilder()
                     .httpClient(new LoggingHttpClient(httpClient))
