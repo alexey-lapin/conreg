@@ -25,6 +25,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
 
       - name: Gradle build
         run: ./gradlew build
@@ -85,6 +87,8 @@ jobs:
 
 #      - name: Setup Gradle
 #        uses: gradle/gradle-build-action@v2
+#        with:
+#          cache-read-only: ${{ github.ref != 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
 #
 #      - name: Gradle publish
 #        env:

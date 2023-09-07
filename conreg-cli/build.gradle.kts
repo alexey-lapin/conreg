@@ -9,6 +9,11 @@ application {
     mainClass.set("com.github.alexeylapin.conreg.cli.ConReg")
 }
 
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+}
+
 dependencies {
     annotationProcessor(libs.picocli.codegen)
 
