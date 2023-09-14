@@ -48,7 +48,7 @@ jobs:
       - name: Setup Java GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
-          version: "21"
+          java-version: 21
           components: "native-image"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: "true"
@@ -76,7 +76,7 @@ jobs:
       - name: Setup Java GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
-          version: "21"
+          java-version: 21
           components: "native-image"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: "true"
