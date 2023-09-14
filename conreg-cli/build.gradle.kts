@@ -1,7 +1,10 @@
+import org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask
+
 plugins {
     id("java")
     id("application")
     id("conregbuild.base-conventions")
+    alias(libs.plugins.graalvm)
     alias(libs.plugins.shadow)
 }
 
@@ -33,4 +36,18 @@ tasks.build {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+val writeArtifactFile by tasks.registering {
+    doLast {
+        val outputDirectory = tasks.getByName<BuildNativeImageTask>("nativeCompile").outputDirectory
+        outputDirectory.get().asFile.mkdirs()
+        outputDirectory.file("gradle-artifact.txt")
+                .get().asFile
+                .writeText("${project.name}-${project.version}")
+    }
+}
+
+tasks.getByName("nativeCompile") {
+    finalizedBy(writeArtifactFile)
 }
