@@ -17,6 +17,14 @@ java {
     sourceCompatibility = JavaVersion.VERSION_11
 }
 
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("conreg")
+        }
+    }
+}
+
 dependencies {
     annotationProcessor(libs.picocli.codegen)
 
