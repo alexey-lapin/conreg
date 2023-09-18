@@ -16,6 +16,14 @@
     "allDeclaredFields": true
   },
   {
+    "name": "com.gihtub.alexeylapin.conreg.client.http.dto.ConfigDto$AuthConfigDto",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "allDeclaredFields": true
+  },
+  {
     "name": "com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
