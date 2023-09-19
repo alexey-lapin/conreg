@@ -23,9 +23,6 @@ graalvmNative {
             imageName.set("conreg")
         }
     }
-    metadataRepository {
-        enabled.set(true)
-    }
 }
 
 dependencies {

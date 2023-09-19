@@ -8,7 +8,7 @@
     "allDeclaredFields": true
   },
   {
-    "name": "com.fasterxml.jackson.databind.PropertyNamingStrategies$UpperSnakeCaseStrategy",
+    "name": "com.fasterxml.jackson.databind.PropertyNamingStrategies$UpperCamelCaseStrategy",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
     "allDeclaredMethods": true,
