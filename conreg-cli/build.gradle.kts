@@ -20,7 +20,7 @@ java {
 graalvmNative {
     binaries {
         named("main") {
-            imageName.set("conreg")
+            imageName.set(rootProject.name)
         }
     }
 }
@@ -34,6 +34,8 @@ dependencies {
     implementation(libs.picocli)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
+
+    runtimeOnly(libs.logback.classic)
 
     testImplementation(libs.junit.jupiter)
 }
