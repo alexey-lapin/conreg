@@ -43,11 +43,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
+          - name: linux
+            os: ubuntu-20.04
             artifact: app-native-linux
-          - os: windows-latest
+          - name: windows
+            os: windows-latest
             artifact: app-native-windows
     runs-on: ${{ matrix.os }}
+    name: build-native-${{ matrix.name }}
     steps:
       - name: Checkout project sources
         uses: actions/checkout@v4
