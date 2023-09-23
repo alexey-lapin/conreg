@@ -39,8 +39,15 @@ jobs:
             conreg-cli/build/libs/*.jar
           retention-days: 5
 
-  build-native-linux:
-    runs-on: ubuntu-20.04
+  build-native:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            artifact: app-native-linux
+          - os: windows-latest
+            artifact: app-native-windows
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout project sources
         uses: actions/checkout@v4
@@ -54,6 +61,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/') }}
 
       - name: Gradle nativeCompile
         run: ./gradlew nativeCompile
@@ -61,41 +70,14 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: app-native-linux
-          path: |
-            conreg-cli/build/native/nativeCompile
-          retention-days: 5
-
-  build-native-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout project sources
-        uses: actions/checkout@v4
-
-      - name: Setup Java GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: 17
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          native-image-job-reports: "true"
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
-      - name: Gradle nativeCompile
-        run: ./gradlew nativeCompile
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-native-windows
+          name: ${{ matrix.artifact }}
           path: |
             conreg-cli/build/native/nativeCompile
           retention-days: 5
 
   release:
     runs-on: ubuntu-latest
-    needs: [ build-jvm, build-native-linux, build-native-windows ]
+    needs: [ build-jvm, build-native ]
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout project sources
