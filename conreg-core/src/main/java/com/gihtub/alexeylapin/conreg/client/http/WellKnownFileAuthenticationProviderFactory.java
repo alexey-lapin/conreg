@@ -2,11 +2,13 @@ package com.gihtub.alexeylapin.conreg.client.http;
 
 import com.gihtub.alexeylapin.conreg.client.http.auth.AuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.client.http.auth.FileAuthenticationProvider;
+import com.gihtub.alexeylapin.conreg.client.http.auth.SimpleAuthenticationProvider;
 import com.gihtub.alexeylapin.conreg.json.JsonCodec;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -29,7 +31,7 @@ public class WellKnownFileAuthenticationProviderFactory {
                 .filter(Files::exists)
                 .collect(Collectors.toSet());
         return existingPaths.isEmpty() ?
-                Optional.empty() :
+                Optional.of(new SimpleAuthenticationProvider(Collections.emptyMap())) :
                 Optional.of(new FileAuthenticationProvider(jsonCodec, existingPaths));
     }
 
