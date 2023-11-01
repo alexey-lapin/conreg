@@ -1,5 +1,6 @@
 package com.gihtub.alexeylapin.conreg.client.http;
 
+import com.gihtub.alexeylapin.conreg.client.http.auth.TokenKey;
 import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
 import com.gihtub.alexeylapin.conreg.client.http.dto.TokenDto;
 import com.gihtub.alexeylapin.conreg.image.Blob;
@@ -8,7 +9,6 @@ import com.gihtub.alexeylapin.conreg.image.Reference;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 public interface ApiClient {
@@ -23,10 +23,10 @@ public interface ApiClient {
     String URL_BLOB = "%s/v2/%s/%s/blobs/%s";
     String URL_BLOB_UPLOAD = "%s/v2/%s/%s/blobs/uploads/";
 
-    Pattern AUTH_CHALLENGE_PATTERN = Pattern.compile("Bearer realm=\"(.*?)\",service=\"(.*?)\",scope=\"(.*?)\"");
+    Pattern AUTH_CHALLENGE_PATTERN = Pattern.compile("Bearer realm=\"(.*?)\"(,service=\"(.*?)\")?(,scope=\"(.*?)\")?");
     Pattern SCOPE_PATTERN = Pattern.compile("(.*):(.*):(.*)");
 
-    Optional<TokenDto> authenticate(String registry, String challenge);
+    Optional<TokenDto> authenticate(RegistryDescriptor registryDescriptor, String challenge, TokenKey tokenKey);
 
     ManifestDescriptor getManifest(Reference reference);
 

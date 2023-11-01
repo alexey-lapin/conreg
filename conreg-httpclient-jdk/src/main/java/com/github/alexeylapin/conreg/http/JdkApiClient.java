@@ -1,6 +1,7 @@
 package com.github.alexeylapin.conreg.http;
 
 import com.gihtub.alexeylapin.conreg.client.http.ApiClient;
+import com.gihtub.alexeylapin.conreg.client.http.RegistryDescriptor;
 import com.gihtub.alexeylapin.conreg.client.http.RegistryResolver;
 import com.gihtub.alexeylapin.conreg.client.http.auth.Action;
 import com.gihtub.alexeylapin.conreg.client.http.auth.Auth;
@@ -55,22 +56,28 @@ public class JdkApiClient implements ApiClient {
 
     @SneakyThrows
     @Override
-    public Optional<TokenDto> authenticate(String registry, String challenge) {
+    public Optional<TokenDto> authenticate(RegistryDescriptor registryDescriptor, String challenge, TokenKey tokenKey) {
         Matcher challengeMatcher = AUTH_CHALLENGE_PATTERN.matcher(challenge);
         if (!challengeMatcher.matches()) {
             return Optional.empty();
         }
-        Matcher scopeMatcher = SCOPE_PATTERN.matcher(challengeMatcher.group(3));
-        if (!scopeMatcher.matches()) {
-            return Optional.empty();
+
+        String challengeRealm = challengeMatcher.group(1);
+        String challengeService = challengeMatcher.group(3);
+        String challengeScope = challengeMatcher.group(5);
+
+        String uri = challengeRealm;
+        if (challengeService != null) {
+            uri += "?service=" + challengeService;
+        }
+        if (challengeScope != null) {
+             uri += (challengeService == null ? "?" : "&") + "scope=" + challengeScope;
         }
 
-        String uri = String.format("%s?service=%s&scope=%s",
-                challengeMatcher.group(1), challengeMatcher.group(2), challengeMatcher.group(3));
         HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
                 .uri(createURI(uri))
                 .GET();
-        authenticationProvider.getForRegistry(Registry.of(registry)).ifPresent(auth -> {
+        authenticationProvider.getForRegistry(Registry.of(registryDescriptor.getServiceName())).ifPresent(auth -> {
             requestBuilder.setHeader("authorization", auth);
         });
         HttpResponse<String> response = httpClient.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
@@ -78,16 +85,39 @@ public class JdkApiClient implements ApiClient {
 
         TokenDto tokenDto = jsonCodec.decode(response.body(), TokenDto.class);
 
-        for (String action : scopeMatcher.group(3).split(",")) {
-            Scope scope = Scope.of(scopeMatcher.group(1), scopeMatcher.group(2), Action.of(action));
-            TokenKey tokenKey = TokenKey.of(challengeMatcher.group(2), scope);
-            tokenStore.store(tokenKey, Token.builder()
-                    .key(tokenKey)
-                    .token(tokenDto.getToken())
-                    .accessToken(tokenDto.getAccessToken().orElse(null))
-                    .expiresIn(tokenDto.getExpiresIn().orElse(null))
-                    .issuedAt(tokenDto.getIssuedAt().orElse(ZonedDateTime.now()))
-                    .build());
+        Token token = Token.builder()
+                .token(tokenDto.getToken())
+                .accessToken(tokenDto.getAccessToken().orElse(null))
+                .expiresIn(tokenDto.getExpiresIn().orElse(null))
+                .issuedAt(tokenDto.getIssuedAt().orElse(ZonedDateTime.now()))
+                .build();
+
+        if (challengeScope == null) {
+            if (challengeService == null) {
+                tokenStore.store(tokenKey, token);
+            } else {
+                TokenKey challengeTokenKey = TokenKey.of(challengeService, tokenKey.getScope());
+                tokenStore.store(challengeTokenKey, token);
+            }
+        } else {
+            Matcher scopeMatcher = SCOPE_PATTERN.matcher(challengeScope);
+            if (scopeMatcher.matches()) {
+                String challengeScopeResourceType = scopeMatcher.group(1);
+                String challengeScopeResourceName = scopeMatcher.group(2);
+                String challengeScopeActions = scopeMatcher.group(3);
+                for (String challengeScopeAction : challengeScopeActions.split(",")) {
+                    Scope scope = Scope.of(challengeScopeResourceType, challengeScopeResourceName, Action.of(challengeScopeAction));
+                    TokenKey challengeTokenKey;
+                    if (challengeService == null) {
+                        challengeTokenKey = TokenKey.of(tokenKey.getService(), scope);
+                    } else {
+                        challengeTokenKey = TokenKey.of(challengeService, scope);
+                    }
+                    tokenStore.store(challengeTokenKey, token);
+                }
+            } else {
+                tokenStore.store(tokenKey, token);
+            }
         }
 
         return Optional.of(tokenDto);
@@ -243,9 +273,9 @@ public class JdkApiClient implements ApiClient {
                                          Action action,
                                          Predicate<HttpResponse<?>> responsePredicate) {
         HttpRequest.Builder builder = requestBuilder.copy();
-        String serviceName = registryResolver.resolve(reference.getRegistry()).getServiceName();
-        TokenKey key = TokenKey.of(serviceName, Scope.repository(reference, action));
-        tokenStore.retrieve(key).ifPresent(token -> {
+        RegistryDescriptor registryDescriptor = registryResolver.resolve(reference.getRegistry());
+        TokenKey tokenKey = TokenKey.of(registryDescriptor.getServiceName(), Scope.repository(reference, action));
+        tokenStore.retrieve(tokenKey).ifPresent(token -> {
             builder.setHeader("authorization", Auth.bearer(token.getToken()).getValue());
         });
         HttpResponse<T> response = httpClient.send(builder.build(), bodyHandler);
@@ -253,7 +283,7 @@ public class JdkApiClient implements ApiClient {
             Optional<String> challengeHeaderOptional = response.headers().firstValue("www-authenticate");
             if (challengeHeaderOptional.isPresent()) {
                 String challenge = challengeHeaderOptional.get();
-                Optional<TokenDto> tokenOptional = authenticate(reference.getRegistry(), challenge);
+                Optional<TokenDto> tokenOptional = authenticate(registryDescriptor, challenge, tokenKey);
                 if (tokenOptional.isPresent()) {
                     TokenDto tokenDto = tokenOptional.get();
                     builder.setHeader("authorization", Auth.bearer(tokenDto.getToken()).getValue());
