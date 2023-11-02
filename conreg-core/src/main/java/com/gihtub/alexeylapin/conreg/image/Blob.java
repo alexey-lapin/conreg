@@ -35,11 +35,17 @@ public class Blob {
         return new Blob(Type.TAR, digest, size, content);
     }
 
+    @Builder
+    public static Blob ofTarGz(String digest, Long size, ThrowingSupplier<InputStream> content) {
+        return new Blob(Type.TGZ, digest, size, content);
+    }
+
     @RequiredArgsConstructor
     public enum Type {
 
         JSON("json"),
-        TAR("tar");
+        TAR("tar"),
+        TGZ("tar.gz");
 
         public final String ext;
 

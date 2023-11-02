@@ -6,6 +6,7 @@ import com.gihtub.alexeylapin.conreg.client.http.dto.ManifestDescriptor;
 import com.gihtub.alexeylapin.conreg.image.Blob;
 import com.gihtub.alexeylapin.conreg.image.Image;
 import com.gihtub.alexeylapin.conreg.image.Reference;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 
 import java.net.URI;
 import java.util.List;
@@ -26,7 +27,7 @@ public class DefaultRegistryOperations implements RegistryOperations {
         Blob configBlob = Blob.ofJson(config.getDigest(), config.getSize(),
                 () -> apiClient.getBlob(reference, config.getDigest()));
         List<Blob> layerBlobs = manifestDescriptor.getLayers().stream()
-                .map(item -> Blob.ofTar(item.getDigest(), item.getSize(),
+                .map(item -> Blob.ofTarGz(item.getDigest(), item.getSize(),
                         () -> apiClient.getBlob(reference, item.getDigest())))
                 .collect(Collectors.toList());
         return new Image(reference, configBlob, layerBlobs);
